@@ -1,0 +1,30 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <link rel="icon"  href="/src/assets/logo.png" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>KHOSA LEAGUE</title>
+
+    <style>
+      /* Adding the dropdown arrow linking the dropdown to the toggler */
+      .dropdownProfile::before{
+        content: '';
+        position: absolute;
+        top: -0.67rem;
+        right: 1.1rem;
+        width: 20px;
+        height: 20px;
+        transform: rotate(45deg);
+        background-color: white;
+        border-left: 1px solid gray;
+        border-top: 1px solid gray;
+
+      }
+    </style>
+  </head>
+  <body>
+    <div id="root"></div>
+    <script type="module" src="/src/main.jsx"></script>
+  </body>
+</html>
