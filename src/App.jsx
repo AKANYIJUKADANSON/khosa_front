@@ -41,8 +41,8 @@ const router = createBrowserRouter(
       <Route  element={ <MainLayout /> }  >
         <Route path='/dashboard' element={ <Dashboard />} />
         <Route path='/fixtures' element={ <ManageFixtures />} />
-        {/* <Route path='/results' element={ <ManageResults />} /> */}
-        <Route path='/results' element={ <TestResults />} />
+        <Route path='/results' element={ <ManageResults />} />
+        {/* <Route path='/results' element={ <TestResults />} /> */}
         <Route path='/posts' element={ <ManagePosts />} />
         <Route path='/players' element={ <ManagePlayers />} />
         <Route path='/teams' element={ <ManageTeams />} />
