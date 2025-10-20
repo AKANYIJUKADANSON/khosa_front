@@ -1,4 +1,3 @@
-
 import { DataTable } from 'primereact/datatable';
 import { Column } from 'primereact/column';
 import { FilterMatchMode } from 'primereact/api';
@@ -7,110 +6,112 @@ import 'primereact/resources/themes/soho-light/theme.css';
 
 import React, { useEffect, useState } from 'react';
 import { ToastContainer } from 'react-toastify';
-import { toast } from 'react-toastify';
-import { BsEyeFill } from 'react-icons/bs';
 import { NavLink } from 'react-router-dom';
-import { IoAddCircle } from 'react-icons/io5';
+import { BiCalendar } from 'react-icons/bi';
+import { IoMdAddCircle } from "react-icons/io";
 import { RxCross1 } from 'react-icons/rx';
-import { HiUserAdd } from 'react-icons/hi';
+import { toast } from 'react-toastify';
 import CustomTooltip from '../../components/CustomTooltip';
 
 
 const ManageFixtures = () => {
-  // If used Create React App (CRA)
-  // const apiUrl = process.env.REACT_APP_API_URL;
-
   // If used vite to create the react app
   const apiUrl = import.meta.env.VITE_API_URL;
 
-  const [isAddUser, setIsAddUser] = useState(false);
+  const [isAddFixture, setIsAddFixture] = useState(false);
+  
+  const [fixtures, setFixtures] = useState([]);
+  const [teamsList, setTeamList] = useState([]);
+  const [current_season, setCurrentSeason] = useState([]);
+  const [matchdayList, setMatchdayList] = useState([]);
 
-  const [first_name, setFirstname] = useState('');
-  const [last_name, setLastname] = useState('');
-  const [useremail, setUseremail] = useState('');
-  const [phone_number, setPhoneNumber] = useState('');
-  const [role, setRole] = useState('');
-  const [gender, setGender] = useState('');
-  const [entity, setEntity] = useState('');
+  const [season, setSeason] = useState('');
+  const [matchday, setMatchday] = useState('');
+  const [match_date, setMatchDate] = useState('');
+  const [home_team, setHomeTeam] = useState('');
+  const [away_team, setAwayTeam] = useState('');
+
+  const [hours, setHours] = useState('');
+  const [minutes, setMinutes] = useState('');
+  const [meridian, setMeridian] = useState('');
 
 
-  const [userList, setUserList] = useState([]);
-  const [entityList, setEntityList] = useState([]);
 
 
-  // Get the category list
+
+
   useEffect(() => {
-    const get_users = async () => {
-      const query = await fetch(`${apiUrl}/users`);
+    const get_fixtures = async () => {
+      const fixtures = await fetch(`${apiUrl}/fixtures`);
+      const data = await fixtures.json();
+      // console.log("Match fixtures: ", data.fixtures);
+      setFixtures(data.fixtures);
+    }
 
-      const response = await query.json();
+    const get_teams = async () => {
+      const teams_list = await fetch(`${apiUrl}/teams`);
+      const data = await teams_list.json();
+      // console.log("Teams_list: ", data.teams);
+      setTeamList(data.teams);
+    }
 
-      if (response.status === '200') {
-        // set the category list
-        console.log('User List: ', response);
-        setUserList(response.users_list);
-      } else {
-        toast.error(response.message);
-      }
+    const get_current_season = async () => {
+      const current_season = await fetch(`${apiUrl}/current_season`);
+      const data = await current_season.json();
+      console.log("current_season: ", data.current_season);
+      setCurrentSeason(data.current_season);
     }
 
 
-    const get_entity_list = async () => {
-      const query = await fetch(`${apiUrl}/entitylist`);
-
-      const response = await query.json();
-
-      if (response.status === '200') {
-        // set the category list
-        setEntityList(response.entity_list);
-        console.log('Entity List: ', response.entity_list);
-      } else {
-        toast.error(response.message);
-      }
+    const get_matchday_list = async () => {
+      const matchday_list = await fetch(`${apiUrl}/matchdays`);
+      const data = await matchday_list.json();
+      console.log("Matchday_list: ", data.matchdays);
+      setMatchdayList(data.matchdays);
     }
 
-    get_users();
-    get_entity_list();
-
-  }, []);
+    get_matchday_list();
+    get_current_season();
+    get_fixtures();
+    get_teams();
+  }, [apiUrl]);
 
   // capture and set data
   const submitFormData = async (e) => {
     e.preventDefault();
 
+    const match_time = hours + ':' + minutes +  meridian;
+
+    // const match_result_data = {
+    //   season: season,
+    //   matchday: matchday,
+    //   match_date: match_date,
+    //   match_time: match_time,
+    //   home_team: home_team,
+    //   away_team: away_team,
+    // }
+
+    // console.log('Fixture Result Data:', match_result_data);
+
     // initialise FormData and append the object with its key
     const formData = new FormData();
 
-    // Validate data
-    if (entity.trim() === '') {
-      toast.error("Entity field is required. Try again");
-      return;
-    }
-    if (role.trim() === '') {
-      toast.error("Role field is required. Try again");
-      return;
-    }
-    if (gender.trim() === '') {
-      toast.error("Gender field is required. Try again");
-      return;
-    }
-
     // Append all data to the formdata array
-    formData.append('first_name', first_name);
-    formData.append('last_name', last_name);
-    formData.append('useremail', useremail);
-    formData.append('entity', entity);
-    formData.append('phone_number', phone_number);
-    formData.append('role', role);
-    formData.append('gender', gender);
+    formData.append('season', season);
+    formData.append('matchday', matchday);
+    formData.append('match_date', match_date);
+    formData.append('match_time', match_time);
 
-    // Send data to the backend
-    const send_user_data = await fetch(`${apiUrl}/users/create`, {
+    formData.append('home_team', home_team);
+    formData.append('away_team', away_team);
+
+    //Send data to the backend
+    const add_fixture_data = await fetch(`${apiUrl}/add_fixture`, {
       method: 'POST',
       body: formData
     });
 
-    const response_data = await send_user_data.json();
+    const response_data = await add_fixture_data.json();
 
     // console.log("CI_3 Response: ", response_data);  
 
@@ -130,13 +131,14 @@ const ManageFixtures = () => {
    * ----------------------------------------------------------------------------------------------
   */
 
-  const data = userList.map((user) => ({
-    ...user,
+  const data = fixtures.map((fixture) => ({
+    ...fixture,
     combinedColumns: `
-            ${user.first_name} 
-            ${user.last_name}
-            ${user.useremail}
-            ${user.phone_number}
+            ${fixture.home_team} 
+            ${fixture.away_team}
+            ${fixture.date}
+            ${fixture.matchday}
+            ${fixture.season}
         `,
   }));
 
@@ -153,38 +155,55 @@ const ManageFixtures = () => {
     },
   });
 
-  const ticketBodyTemplate = (row) => {
+  const teamBodyTemplate = (row) => {
 
     return (
       <>
-        <NavLink to={`/users/${row.hashing}`} className="hover:text-blue-800" >
-          <span className='font-extrabold'>{row.first_name + ' ' + row.last_name}</span>
-          <span className='font-extralight'> ({row.role})</span>
-        </NavLink>
-        <br />
-        <span className='text-sm font-light'>
-          <span className='font-bold mr-2'>Email:</span>{row.useremail}
-        </span>
-        <br />
-        <span className='text-sm font-light'>
-          <span className='font-bold'>Phone: </span>{row.phone_number}
-        </span>
+
+        <div className='flex justify-center items-center my-2'>
+          <div className="block sm:flex md:flex space-x-5">
+            <div className='font-extralight'>
+              Matchday: {row.matchday}
+            </div>
+
+            <div className='font-extralight'>
+              Date: {row.date}
+            </div>
+          </div>
+        </div>
+
+        <div className='flex justify-center items-center'>
+
+          <div className='text-sm font-light text-center'>
+            {/* <img src="" alt="" /> */}
+            <span className='font-bold'>{row.home_team}</span><br />
+          </div>
+
+          <div className="font-bold text-red-600 mx-2 text-center">
+            <span className='font-bold'>vs</span><br />
+            
+          </div>
+
+          <div className='text-sm font-light text-center'>
+            {/* <img src="" alt="" /> */}
+            <span className='font-bold'>{row.away_team}</span><br />
+          </div>
+        </div>
       </>
     )
   }
 
   return (
     <>
-      <div className='grow p-2 h-full md:h-screen lg:h-full bg-gray-100 ml-16 md:ml-0'>
-          <div className="items-center my-2">
-            {(!isAddUser) ?
-              <h2 className="text-xl text-left text-blue-900 font-bold my-auto">FIXTURES</h2>
-              :
-              <h2 className="text-xl text-left text-blue-900 font-bold my-auto">ADD FIXTURE</h2>
-            }
-          </div>
+      <div className='grow p-2 h-full md,lg:h-screen bg-gray-100 ml-16 md:ml-0'>
+        <div className="items-center my-2">
+          {(!isAddFixture) ?
+            <h2 className="text-md text-left text-blue-900 font-bold my-auto">FIXTURES</h2>
+            :
+            <h2 className="text-md text-left text-blue-900 font-bold my-auto">ADD FIXTURE</h2>
+          }
+        </div>
         <div className='grid '>
-
 
           <ToastContainer
             position="top-right"
@@ -197,105 +216,163 @@ const ManageFixtures = () => {
             pauseOnHover
           />
 
-
-          {(isAddUser) &&
+          {(isAddFixture) &&
             <div className="flex border-0 w-full">
 
               <form onSubmit={submitFormData} className='space-y-4 w-full shadow-xl/20 ring-1 ring-gray-200 my-2 bg-white text-black rounded p-4' >
 
                 <div className="block md:flex space-x-6">
-                  <div className='w-full'>
-                    <label className='block mb-2 text-sm font-medium text-gray-700'>First Name*</label>
-                    <input type='text' name='first_name' className='w-full p-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 border-gray-300' required
-                      value={first_name}
-                      onChange={(e) => setFirstname(e.target.value)}
-                    />
-                  </div>
 
                   <div className='w-full'>
-                    <label className='block mb-2 text-sm font-medium text-gray-700'>Last Name*</label>
-                    <input type='text' name='last_name' className='w-full p-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 border-gray-300' required
-                      value={last_name}
-                      onChange={(e) => setLastname(e.target.value)}
-                    />
-                  </div>
-
-                  <div className='w-full'>
-                    <label className='block mb-2 text-sm font-medium text-gray-700'>Useremail*</label>
-                    <input type='email' name='useremail' className='w-full p-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 border-gray-300' required
-                      value={useremail}
-                      onChange={(e) => setUseremail(e.target.value)}
-                    />
-                  </div>
-
-                </div>
-
-                <div className="block md:flex space-x-6">
-                  <div className='w-full'>
-                    <label className='block mb-2 text-sm font-medium text-gray-700'>Entity*</label>
+                    <label className='block mb-1 text-sm font-medium text-gray-700'>Season*</label>
 
                     <select
-                      name="entity"
-                      value={entity}
-                      onChange={(e) => setEntity(e.target.value)}
+                      name="season"
+                      value={season}
+                      onChange={(e) => setSeason(e.target.value)}
                       className="mt-1 block w-full p-3 border pr-6 rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-500 focus:ring-opacity-50"
+                      required
                     >
-                      <option value="">Choose..</option>
-                      {entityList.map((entity) => (
-                        <option key={entity.hashing} value={entity.hashing}>
-                          {entity.name + ' (' + entity.code + ')'}
+                      <option disabled defaultValue={''} value=''>Choose...</option>
+                      <option value={current_season.id}>Season {current_season.season}</option>
+                    </select>
+                  </div>
+
+                  <div className='w-full my-4 md:my-0 lg:my-0'>
+                    <label className='block mb-1 text-sm font-medium text-gray-700'>Matchday*</label>
+
+                    <select
+                      name="matchday"
+                      value={matchday}
+                      onChange={(e) => setMatchday(e.target.value)}
+                      className="mt-1 block w-full p-3 border pr-6 rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-500 focus:ring-opacity-50"
+                      required
+                    >
+                      <option disabled value="">Choose..</option>
+                      {matchdayList.map((matchday) => (
+                        <option key={matchday.id} value={matchday.id}>
+                          Matchday {matchday.matchday}
                         </option>
                       ))}
                     </select>
                   </div>
 
-                  <div className='w-full'>
-                    <label className='block mb-2 text-sm font-medium text-gray-700'>Mobile Number*</label>
-                    <input type='text' name='phone_number' className='w-full p-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 border-gray-300' placeholder='256 7.......'
-                      value={phone_number}
-                      onChange={(e) => setPhoneNumber(e.target.value)}
+                </div>
+
+                <div className="block md:flex space-x-6 mt-10">
+
+                  <div className='w-full my-4 md:my-0 lg:my-0'>
+                    <label className='block mb-1 text-sm font-medium text-gray-700'>Match Date*</label>
+                    <input
+                      type='date'
+                      name='match_date'
+                      value={match_date}
+                      onChange={(e) => setMatchDate(e.target.value)}
+                      className='w-full p-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 border-gray-300' required
                     />
                   </div>
 
+                  <div className='w-full my-4 md:my-0 lg:my-0'>
+                    <label className='block mb-1 text-sm font-medium text-gray-700'>Time*</label>
+
+                    <div className="flex">
+
+                      <input
+                        name="hours"
+                        value={hours}
+                        onChange={(e) => setHours(e.target.value)}
+                        type='number'
+                        min={1} max={12}
+                        className='w-full mx-2 p-1 border text-center font-bold rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 border-gray-300' 
+                        placeholder='00'
+                        required
+                      />
+
+                      <input
+                        name="minutes"
+                        value={minutes}
+                        onChange={(e) => setMinutes(e.target.value)}
+                        type='number'
+                        min={0} max={59}
+                        className='w-full text-center mx-2 p-1 border font-bold rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 border-gray-300' 
+                        placeholder='00'
+                        required
+                      />
+
+                      <select
+                        name="meridian"
+                        value={meridian}
+                        onChange={(e) => setMeridian(e.target.value)}
+                        className="mt-1 block w-full text-center p-3 border font-bold rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-500 focus:ring-opacity-50"
+                        required
+                      > 
+                        <option disabled value="">choose...</option>
+                        <option value='AM'>PM</option>
+                        <option value='PM'>AM</option>
+                      </select>
+                    </div>
+                  </div>
+
+                </div>
+
+                <div className="block md:flex space-x-6 mt-10">
+
                   <div className='w-full'>
-                    <label className='block mb-2 font-medium'>Role*</label>
-                    <select name='role' className='w-full p-2 border rounded' required
-                      value={role}
-                      onChange={(e) => setRole(e.target.value)}
-                    >
-                      <option value="">Choose..</option>
-                      <option value='supervisor'>Supervisor</option>
-                      <option value='sysadmin'>System Admin</option>
-                      <option value='other'>Other</option>
-                    </select>
+                    <div className='my-2 md:my-0 lg:my-0'>
+                      <label className='block text-sm font-medium text-gray-700'>Home Team<span className='text-red-500 font-bold'>*</span></label>
+
+                      <select
+                        name="home_team"
+                        value={home_team}
+                        onChange={(e) => setHomeTeam(e.target.value)}
+                        className="mt-1 block w-full p-3 border pr-6 rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-500 focus:ring-opacity-50"
+                      >
+                        <option value="">Choose..</option>
+                        {teamsList.map((team) => (
+                          <option key={team.id} value={team.id}>
+                            {team.name}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+
                   </div>
 
-                  <div className='md:w-md w-full'>
-                    <label className='block mb-2 font-medium'>Gender*</label>
-                    <select name='gender' className='w-full p-2 border rounded' required
-                      value={gender}
-                      onChange={(e) => setGender(e.target.value)}
-                    >
-                      <option value="">Choose..</option>
-                      <option value='M'>Male</option>
-                      <option value='F'>Female</option>
-                    </select>
+                  <div className='w-full'>
+                    <div className='my-2 md:my-0 lg:my-0'>
+                      <label className='block text-sm font-medium text-gray-700'>Away Team<span className='text-red-500 font-bold'>*</span></label>
+
+                      <select
+                        name="away_team"
+                        value={away_team}
+                        onChange={(e) => setAwayTeam(e.target.value)}
+                        className="mt-1 block w-full p-3 border pr-6 rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-500 focus:ring-opacity-50"
+                      >
+                        <option value="">Choose..</option>
+                        {teamsList.map((team) => (
+                          <option key={team.id} value={team.id}>
+                            {team.name}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+
                   </div>
 
                 </div>
 
-
-
-                <div className='px-2 mt-10'>
+                <div className='mt-10'>
                   <div className='space-x-5 my-2 flex justify-start'>
-                    <button type='submit' className='cursor-pointer px-4 py-2 bg-[#082f6b] hover:bg-blue-700 text-white rounded font-light'>ADD</button>
+                    <button type='submit' className='cursor-pointer px-4 py-2 bg-teal-700 hover:bg-teal-700 text-white rounded font-light'>ADD FIXTURE</button>
                   </div>
                 </div>
+
               </form>
+
             </div>
           }
 
-          {(!isAddUser) &&
+          {(!isAddFixture) &&
             <div className="w-full flex flex-col overflow-auto bg-white px-4">
               <div className="mt-2">
                 <InputText
@@ -308,49 +385,41 @@ const ManageFixtures = () => {
                   }
                 />
               </div>
-              {/* <div className='overflow-auto'> */}
               <DataTable value={data}
                 ref={data}
-                tableStyle={{ minWidth: '50rem' }}
+                tableStyle={{ minWidth: '10rem' }}
                 filters={filters}
                 globalFilterFields={['combinedColumns']}
                 className='datatable-responsive mt-6'
-                currentPageReportTemplate='showing {first} to {last} of {totalRecords} tickets'
+                currentPageReportTemplate='showing {first} to {last} of {totalRecords} results'
                 paginatorTemplate='FirstPageLink PrevPageLink PageLinks NextPageLink LastPageLink CurrentPageReport RowsPerPageDropdown'
                 removableSort
-                // showGridlines
-                stripedRows
                 dataKey='id'
-                // header={header}
-                emptyMessage='No tickets available'
+                emptyMessage='No results available'
                 paginator
-                rows={5}
+                rows={10}
                 sortMode="multiple"
-                rowsPerPageOptions={[10, 20, 30, 40, 50, userList.length]}
+                rowsPerPageOptions={[10, 20, 30, 40, 50, fixtures.length]}
               >
-                <Column body={ticketBodyTemplate} sortable sortField='last_name' header='User' ></Column>
-                <Column field='gender' sortable header='Gender' ></Column>
-                <Column field='name' sortable header='Entity' ></Column>
-
+                <Column body={teamBodyTemplate} ></Column>
               </DataTable>
-              {/* </div> */}
             </div>
           }
 
         </div>
       </div>
 
-      {(!isAddUser) ?
+      {(!isAddFixture) ?
         <NavLink
-          onClick={() => setIsAddUser(true)}
-          className="bg-blue-800 text-white p-2 md:p-3 shadow-lg fixed  rounded-full bottom-7 right-4 hover:bg-blue-900 flex items-center justify-center">
-          <CustomTooltip content={'Add System User'}>
-            <HiUserAdd className='text-4xl' />
+          onClick={() => setIsAddFixture(true)}
+          className="bg-teal-500 text-white p-2 md:p-3 shadow-lg fixed  rounded-full bottom-7 right-4 hover:bg-teal-700 flex items-center justify-center">
+          <CustomTooltip content={'Add Fixture'}>
+            <IoMdAddCircle className='text-4xl' />
           </CustomTooltip>
         </NavLink>
         :
         <NavLink
-          onClick={() => setIsAddUser(false)}
+          onClick={() => setIsAddFixture(false)}
           className="bg-red-500 text-white p-2 md:p-3 shadow-lg fixed  rounded-full bottom-7 right-4 hover:bg-red-700 flex items-center justify-center">
           <CustomTooltip content={'Cancel'}>
             <RxCross1 className='text-4xl' />
