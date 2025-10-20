@@ -10,11 +10,9 @@ const Navbar = ({ appRef }) => {
   // If used vite to create the react app
   const apiUrl = import.meta.env.VITE_API_URL;
 
-  const [authenticated_user, setAuthenticatedUser] = useState([]);
   const [isOpen, setIsOpen] = useState(false);
   const [isFullScreen, setIsFullScreen] = useState(false);
   const dropdownRef = useRef(null);
-  const [unassignedTickets, setUnassignedTickets] = useState([]);
 
   const toggleFullScreen = () => {
     if (!document.fullscreenElement) {
@@ -70,28 +68,6 @@ const Navbar = ({ appRef }) => {
     };
   }, []);
 
-  useEffect(() => {
-    const user = JSON.parse(localStorage.getItem('authenticated_user')).authenticated_userdata;
-    setAuthenticatedUser(user);
-  }, []);
-
-
-  // Get unassigned tasks to fill the notification part
-  useEffect(() => {
-    const fetchUnassignedTickets = async () => {
-      const response = await fetch(`${apiUrl}/tickets/status/unassigned`);
-      const data = await response.json();
-      setUnassignedTickets(data);
-
-      // console.log('Unassigned Tickets: ', data);
-    };
-
-    fetchUnassignedTickets();
-  }, []);
-
-
-  // console.log('Login User: ' + authenticated_user);
-
   return (
     <div className="fixed z-10 top-0 w-full bg-white text-teal-500 md:ml-0 py-1 border-b border-gray-300 h-20 flex items-center">
       <div className="flex items-center justify-start w-full ml-6">
@@ -116,9 +92,10 @@ const Navbar = ({ appRef }) => {
         <button
           onClick={toggleDropdown}
           className="flex items-center cursor-pointer  dropdown-toggle">
-          <span className="mr-2 font-bold text-sm hidden md:block">{authenticated_user['first_name']}</span>
+          <span className="mr-2 font-semibold text-sm hidden md:block">
+            ADMIN
+          </span>
           <span className="mr-3 overflow-hidden rounded-full h-11 w-11">
-            {/* <img src= { profile } alt="User" /> */}
             <MdAccountCircle className='rounded-full h-10 w-10' />
           </span>
         </button>

@@ -15,7 +15,7 @@ import { MdAccountCircle } from 'react-icons/md';
 const Sidebar = () => {
 
     // get loggin details from local storage
-    const [authenticated_user, setAuthenticatedUser] = useState([]);
+    // const [authenticated_user, setAuthenticatedUser] = useState([]);
     const sidebarRefRef = useRef(null);
     const [toggle, setToggle] = useState(false);
 
@@ -43,17 +43,17 @@ const Sidebar = () => {
 
 
     // const [comment, setComment] = useState('');
-    useEffect(() => {
-        const user = JSON.parse(localStorage.getItem('authenticated_user')).authenticated_userdata;
-        setAuthenticatedUser(user);
-    }, []);
+    // useEffect(() => {
+    //     const user = JSON.parse(localStorage.getItem('authenticated_user')).authenticated_userdata;
+    //     setAuthenticatedUser(user);
+    // }, []);
 
     return (
 
         <div ref={sidebarRefRef} style={{ fontFamily: 'sans-serif' }} className={`bg-white z-50 mt-20 h-full pl-4 pr-0 p-2 fixed ${(toggle) ? 'w-35' : 'w-16'} md:w-64 border-r border-gray-300 shadow-lg`}>
 
             <button
-                className="flex justify-end me-4 lg:hidden rounded"
+                className="flex justify-end me-4 md:hidden  lg:hidden rounded"
                 onClick={expandSidebar}
             >
                 {(!toggle) ?

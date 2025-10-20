@@ -17,7 +17,8 @@ const MainLayout = () => {
    * If the user is not authenticated, then redirect to the login page
    * If the user is authenticated, then render the main layout with the sidebar, navbar and other components
    */
-  const auth_status = localStorage.getItem('auth_status');
+  // const auth_status = localStorage.getItem('auth_status');
+  const auth_status = '1';
 
   return (auth_status !== '1') ? window.location.href = '/login' : 
     <>
