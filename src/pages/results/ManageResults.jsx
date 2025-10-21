@@ -11,7 +11,7 @@ import { ToastContainer } from 'react-toastify';
 import { NavLink } from 'react-router-dom';
 import { IoMdAddCircle } from "react-icons/io";
 import { RxCross1 } from 'react-icons/rx';
-// import { toast } from 'react-toastify';
+import { toast } from 'react-toastify';
 import CustomTooltip from '../../components/CustomTooltip';
 
 const ManageResults = () => {
@@ -32,6 +32,7 @@ const ManageResults = () => {
     away_had_lady: false,
     home_scorers: [{ name: '', goals: '' }],
     away_scorers: [{ name: '', goals: '' }],
+    win_type: '',
   });
 
   // State for player datalists
@@ -161,6 +162,7 @@ const ManageResults = () => {
     // Append individual form fields
     formDataToSend.append('season_id', formData.season_id);
     formDataToSend.append('matchday_id', formData.matchday_id);
+    formDataToSend.append('win_type', formData.win_type);
     formDataToSend.append('match_date', formData.match_date);
     formDataToSend.append('home_team', formData.home_team);
     formDataToSend.append('away_team', formData.away_team);
@@ -195,13 +197,14 @@ const ManageResults = () => {
 
       console.log("CI_3 Response: ", response_data);
 
-      // if (response_data.status === '200') {
-      //   toast.success(response_data.message);
-      //   window.location.reload();
-      // } else {
-      //   toast.error(response_data.message);
-      //   return;
-      // }
+      if (response_data.status === '200') {
+        toast.success(response_data.message);
+        // TODO: Wait for some 5 sec before refresh to display the toast
+        window.location.reload();
+      } else {
+        toast.error(response_data.message);
+        return;
+      }
 
 
     } catch (error) {
@@ -286,9 +289,9 @@ const ManageResults = () => {
       <div className='grow p-2 h-full md,lg:h-screen bg-gray-100 ml-16 md:ml-0'>
         <div className="items-center my-2">
           {(!isAddResult) ?
-            <h2 className="text-md text-left text-blue-900 font-bold my-auto">CURRENT RESULTS</h2>
+            <h2 className="text-md text-left text-teal-500 font-bold my-auto">CURRENT RESULTS</h2>
             :
-            <h2 className="text-md text-left text-blue-900 font-bold my-auto">ADD MATCH RESULT</h2>
+            <h2 className="text-md text-left text-teal-500 font-bold my-auto">ADD MATCH RESULT</h2>
           }
         </div>
         <div className='grid '>
@@ -329,11 +332,12 @@ const ManageResults = () => {
                   <div className='w-full'>
                     <label>Matchday: </label>
                     <select
-                      name="matchday"
+                      name="matchday_id"
                       value={formData.matchday_id}
                       onChange={handleInputChange}
-                      className=" block w-full p-3 border rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-500 focus:ring-opacity-50"
+                      className=" overflow-auto block w-full p-3 border rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-500 focus:ring-opacity-50"
                       required
+                      
                     >
                       <option disabled value="">Choose...</option>
                       {matchdayList.map((matchday) => (
@@ -355,6 +359,23 @@ const ManageResults = () => {
                       className='w-full p-3 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 border-gray-300'
 
                     />
+                  </div>
+
+                  <div className='w-full'>
+                    <label>Win Type: </label>
+                    <select
+                      name="win_type"
+                      value={formData.win_type}
+                      onChange={handleInputChange}
+                      className=" block w-full p-3 border rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-500 focus:ring-opacity-50"
+                      required
+                    >
+                      <option disabled value="">Choose...</option>
+                      
+                        <option value='Normal'>Normal</option>
+                        <option value='Walkover'>WalkOver</option>
+                      
+                    </select>
                   </div>
 
 
@@ -381,7 +402,7 @@ const ManageResults = () => {
                   </div>
 
                   <div className='w-fit flex justify-center items-center'>
-                    <span className='font-bold text-center text-2xl text-teal-500'> vs </span>
+                    <span className='font-bold text-center text-xl text-red-500'> vs </span>
                   </div>
 
                   <div className='w-full'>
