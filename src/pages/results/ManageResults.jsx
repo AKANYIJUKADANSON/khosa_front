@@ -199,8 +199,10 @@ const ManageResults = () => {
 
       if (response_data.status === '200') {
         toast.success(response_data.message);
-        // TODO: Wait for some 5 sec before refresh to display the toast
-        window.location.reload();
+        setTimeout(() => {
+          window.location.reload();
+        }, 4000);
+        
       } else {
         toast.error(response_data.message);
         return;
@@ -307,7 +309,7 @@ const ManageResults = () => {
             pauseOnHover
           />
 
-          {(!isAddResult) &&
+          {(isAddResult) &&
             <div className="flex border-0 w-full">
               <form onSubmit={handleSubmit} className='space-y-4 w-full shadow-xl/20 ring-1 ring-gray-200 my-2 bg-white text-black rounded p-4'>
                 <div className="block md:flex space-x-6">
@@ -572,7 +574,7 @@ const ManageResults = () => {
               </form>
             </div >
           }
-          {(isAddResult) &&
+          {(!isAddResult) &&
             <div className="w-full flex flex-col overflow-auto bg-white px-4">
               <div className="mt-2">
                 <InputText

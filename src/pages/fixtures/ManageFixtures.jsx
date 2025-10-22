@@ -195,7 +195,7 @@ const ManageFixtures = () => {
 
   return (
     <>
-      <div className='grow p-2 h-full md,lg:h-screen bg-gray-100 ml-16 md:ml-0'>
+      <div className='grow p-2 h-full md:h-screen lg:h-screen bg-gray-100 ml-16 md:ml-0'>
         <div className="items-center my-2">
           {(!isAddFixture) ?
             <h2 className="text-md text-left text-blue-900 font-bold my-auto">FIXTURES</h2>
