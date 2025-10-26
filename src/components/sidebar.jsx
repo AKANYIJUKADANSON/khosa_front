@@ -5,7 +5,7 @@ import LogoComponent from './LogoComponent';
 
 
 import { NavLink } from 'react-router-dom';
-import { BiCalendar, BiSolidReport } from 'react-icons/bi';
+import { BiCalendar, BiImage, BiSolidReport } from 'react-icons/bi';
 import { HiArrowCircleLeft, HiArrowCircleRight, HiArrowSmRight } from 'react-icons/hi';
 import { GiLinkedRings } from 'react-icons/gi';
 import { GrGallery } from 'react-icons/gr';
@@ -91,6 +91,13 @@ const Sidebar = () => {
                     to='/teams' className='flex items-center py-2 my-1 md:my-2 md:pl-2 md:mr-4 space-x-1 hover:rounded hover:cursor-pointer hover:bg-gray-200 hover:text-white'>
                     <BsPeopleFill className='text-2xl text-teal-500 md:mr-4' />
                     <span className={`${(toggle) ? 'md:inline' : 'hidden'} md:inline text-sm font-bold text-teal-500`}>Teams</span>
+                </NavLink>
+
+                <NavLink
+                    onClick={() => setToggle(false)}
+                    to='/wallhero' className='flex items-center py-2 my-1 md:my-2 md:pl-2 md:mr-4 space-x-1 hover:rounded hover:cursor-pointer hover:bg-gray-200 hover:text-white'>
+                    <BiImage className='text-2xl text-teal-500 md:mr-4' />
+                    <span className={`${(toggle) ? 'md:inline' : 'hidden'} md:inline text-sm font-bold text-teal-500`}>Wallhero</span>
                 </NavLink>
 
                 <NavLink

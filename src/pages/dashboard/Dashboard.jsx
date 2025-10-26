@@ -92,7 +92,7 @@ const Dashboard = () => {
 
     return (
        
-        <div className='grow p-2 ml-16 md:ml-0 bg-gray-100'>
+        <div className='grow p-2 ml-16 md:ml-0 bg-gray-100 h-full md:h-screen lg:h-screen'>
 
             <div className={`grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-4 `}>
                 

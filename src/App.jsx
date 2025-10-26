@@ -25,6 +25,7 @@ import ManageGallery from './pages/gallery/ManageGallery';
 import ManagePlayers from './pages/players/ManagePlayers';
 import ManageAbout from './pages/about/ManageAbout';
 import TestResults from './pages/results/TestResults';
+import AddWallHero from './pages/teams/AddWallHero';
 
 
 const router = createBrowserRouter(
@@ -42,7 +43,7 @@ const router = createBrowserRouter(
         <Route path='/dashboard' element={ <Dashboard />} />
         <Route path='/fixtures' element={ <ManageFixtures />} />
         <Route path='/results' element={ <ManageResults />} />
-        {/* <Route path='/results' element={ <TestResults />} /> */}
+        <Route path='/wallhero' element={ <AddWallHero />} />
         <Route path='/posts' element={ <ManagePosts />} />
         <Route path='/players' element={ <ManagePlayers />} />
         <Route path='/teams' element={ <ManageTeams />} />

@@ -574,6 +574,7 @@ const ManageResults = () => {
               </form>
             </div >
           }
+          
           {(!isAddResult) &&
             <div className="w-full flex flex-col overflow-auto bg-white px-4">
               <div className="mt-2">
