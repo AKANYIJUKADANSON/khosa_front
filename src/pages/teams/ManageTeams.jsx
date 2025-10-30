@@ -14,6 +14,9 @@ import { RxCross1 } from 'react-icons/rx';
 import { toast } from 'react-toastify';
 import CustomTooltip from '../../components/CustomTooltip';
 import { IoClose } from 'react-icons/io5';
+import { BsTicket } from 'react-icons/bs';
+import { CgDockRight } from 'react-icons/cg';
+import { FaCheckCircle } from 'react-icons/fa';
 
 
 const ManageTeams = () => {
@@ -88,6 +91,25 @@ const ManageTeams = () => {
     }
   };
 
+  const initiateStandings = async () => {
+    //Send data to the backend
+    const init_team_standings = await fetch(`${apiUrl}/init_standings`);
+    const response = await init_team_standings.json();
+    console.log('Initialization Status:', response);
+
+    if (response.status === '200') {
+      toast.success(response.message);
+      setTimeout(() => {
+        window.location.reload();
+      }, 2000);
+    } else {
+      toast.error(response.message);
+      return;
+    }
+
+
+  }
+
   // capture and set data
   const submitFormData = async (e) => {
     e.preventDefault();
@@ -99,7 +121,7 @@ const ManageTeams = () => {
      * If an attachment was added, upload it too
      */
     if (logo) {
-        formData.append('logo', logo);
+      formData.append('logo', logo);
     }
 
     // Append all data to the formdata array
@@ -166,9 +188,13 @@ const ManageTeams = () => {
       <>
 
         <div className=''>
-          <div className="block space-x-5">
-            <div className='font-extralight'>
-              Team: {row.name}
+          <div className="space-x-5">
+            <div className='flex font-extralight'>
+              <img src={row.logo} alt="" className='h-9 w-9 rounded-full' />
+            </div>
+
+            <div className='flex font-extralight'>
+              Team: <span className='mx-2'>{row.name}</span>
             </div>
 
             <div className='font-extralight'>
@@ -180,7 +206,7 @@ const ManageTeams = () => {
     )
   }
 
-    // Set the status bg and text color
+  // Set the status bg and text color
   const activeStateColor = (state) => {
     if (state == '1') {
       return 'bg-green-600 text-white';
@@ -191,14 +217,14 @@ const ManageTeams = () => {
 
   // Ticket column(title, description, email and phone) template
   const teamStateBodyTemplate = (row) => {
-      return (
-          <>
-              <span className={`p-1 px-3 rounded text-sm font-medium ${activeStateColor(row.is_active)}
+    return (
+      <>
+        <span className={`p-1 px-3 rounded text-sm font-medium ${activeStateColor(row.is_active)}
                   `}>
-                  {row.is_active === '1' ? 'Active' : 'Inactive' }
-              </span>
-          </>
-      )
+          {row.is_active === '1' ? 'Active' : 'Inactive'}
+        </span>
+      </>
+    )
   }
 
   return (
@@ -381,31 +407,42 @@ const ManageTeams = () => {
                 <Column field='about' header='About'></Column>
                 <Column body={teamStateBodyTemplate} header='Status'></Column>
 
-                
+
               </DataTable>
             </div>
           }
 
         </div>
+
       </div>
 
-      {(!isAddTeam) ?
-        <NavLink
-          onClick={() => setIsAddTeam(true)}
-          className="bg-teal-500 text-white p-2 md:p-3 shadow-lg fixed  rounded-full bottom-7 right-4 hover:bg-teal-700 flex items-center justify-center">
-          <CustomTooltip content={'Add Team'} closeOnClick>
-            <IoMdAddCircle className='text-4xl' />
-          </CustomTooltip>
-        </NavLink>
-        :
-        <NavLink
-          onClick={() => setIsAddTeam(false)}
-          className="bg-red-500 text-white p-2 md:p-3 shadow-lg fixed  rounded-full bottom-7 right-4 hover:bg-red-700 flex items-center justify-center">
-          <CustomTooltip content={'Cancel'}>
-            <RxCross1 className='text-4xl' />
-          </CustomTooltip>
-        </NavLink>
-      }
+      <div className="z-10 fixed bottom-20 right-10 flex flex-row-reverse gap-3 items-center ">
+        <div className="transform transition-all duration-300 ease-in-out -translate-x-25 hover:scale-3d">
+          <NavLink
+            onClick={initiateStandings}
+            className="bg-blue-800 text-white p-2 md:p-2 shadow-lg fixed transition-all  rounded-full hover:bg-teal-700 flex items-center justify-center">
+            <FaCheckCircle className='text-3xl' />
+          </NavLink>
+        </div>
+
+        <div className="transform transition-all duration-300 ease-in-out -translate-x-6 hover:scale-3d">
+
+          {(!isAddTeam) ?
+            <NavLink
+              onClick={() => setIsAddTeam(true)}
+              className="bg-teal-500 text-white p-2 md:p-2 shadow-lg fixed  rounded-full hover:bg-teal-700 flex items-center justify-center">
+                <IoMdAddCircle className='text-3xl' />
+            </NavLink>
+            :
+            <NavLink
+              onClick={() => setIsAddTeam(false)}
+              className="bg-red-500 text-white p-2 md:p-2 shadow-lg fixed  rounded-full hover:bg-red-700 flex items-center justify-center">
+                <RxCross1 className='text-3xl' />
+            </NavLink>
+          }
+
+        </div>
+      </div>
     </>
   )
 }

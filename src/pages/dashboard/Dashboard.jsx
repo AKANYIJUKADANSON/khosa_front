@@ -25,36 +25,54 @@ const Dashboard = () => {
     const [fixtures, setFixtures] = useState([]);
     const [seasons, setSeasons] = useState([]);
 
-    // const navigate = useNavigate();
-    // const [isModalOpen, setIsModalOpen] = useState(false);
-    // const [modalContent, setModalContent] = useState({ title: '', description: '' });
+    useEffect(() => {
 
+        // generate colors according to the number of teams
+        const generateRandomHexColor = () => {
+            return '#' + Math.floor(Math.random() * 16777215).toString(16).padStart(6, 0);
+        }
 
-    // const handleOpenModal = (title, description) => {
-    //     setModalContent({
-    //         title,
-    //         description
+        const colors = ['#FF2056', '#000080', '#FFDF20', '#008000', '#ff0000', '#1447E6', '#E7180B', '#800000', '#8A0194', '#9AE630', '#008080', '#800080', '#008000' ];
+        
+        if (
+            teams.length > 0
+        ) {
+            const labels = [];
+            const data = [];
+            const backgroundColors = [];
 
-    //     });
-    //     setIsModalOpen(true);
-    // };
+            teams.map((team)=>{
+                labels.push(team.name);
+                data.push(team.points);
+                for (let x = 0; x < teams.length; x++) {
+                    if (teams.length > 20){
+                        backgroundColors.push(generateRandomHexColor());
+                    }else{
+                        backgroundColors.push(colors[x]);
+                    }
+                }
+                
+            });
 
-    // const handleCloseModal = () => {
-    //     setIsModalOpen(false);
-    //     setModalContent({ title: '', description: '' });
-    // };
+            
 
-    // State for the chart data
-    // const [pieChartData, setPieChartData] = useState({
-    //     labels: [],
-    //     datasets: []
-    // });
+            const dataset = {
+                labels,
+                datasets: [{
+                    // label: 'Teams',
+                    data,
+                    backgroundColor: backgroundColors
+                }]
+            };
 
-    // const [barChartData, setBarChartData] = useState({
-    //     labels: [],
-    //     datasets: []
-    // });
+            setBarChartData(dataset);
+        }
+    }, [apiUrl, teams]);
 
+    const [barChartData, setBarChartData] = useState({
+        labels: [],
+        datasets: []
+    });
 
     useEffect(() => {
 
@@ -86,16 +104,16 @@ const Dashboard = () => {
 
         fetchData();
 
-    }, [ apiUrl ]);
+    }, [apiUrl]);
 
 
 
     return (
-       
-        <div className='grow p-2 ml-16 md:ml-0 bg-gray-100 h-full md:h-screen lg:h-screen'>
+
+        <div className='grow p-2 ml-16 md:ml-0 bg-gray-100 h-full mb-10'>
 
             <div className={`grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-4 `}>
-                
+
                 <Card icon={<BsPeopleFill />} title={"Teams"} value={teams.length} bgColor={"bg-green-300"} nav_link={`/teams`} />
 
                 <Card icon={<BiCalendar />} title={"Fixtures"} value={fixtures.length} bgColor={"bg--300"} nav_link={`/fixtures`} />
@@ -106,11 +124,11 @@ const Dashboard = () => {
 
             </div>
 
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            <div className="w-full gap-6">
                 {/* Bar Chart Section */}
-                {/* <div className="bg-white  shadow-md p-4 ">
+                <div className="bg-white  shadow-md p-4 ">
                     <h3 className="text-md font-bold text-[#082f6b] mb-6">Teams and Points Summary</h3>
-                    <div className="h-[300px] ">
+                    <div className="h-[350px] w-full ">
                         {barChartData.labels.length > 0 && (
                             <Bar
                                 data={barChartData}
@@ -119,7 +137,7 @@ const Dashboard = () => {
                                     maintainAspectRatio: false,
                                     plugins: {
                                         legend: {
-                                            display: true,
+                                            display: false,
                                             position: 'top',
                                             labels: {
                                                 boxWidth: 10,
@@ -143,8 +161,7 @@ const Dashboard = () => {
                             />
                         )}
                     </div>
-                </div> */}
-
+                </div>
             </div>
 
         </div>

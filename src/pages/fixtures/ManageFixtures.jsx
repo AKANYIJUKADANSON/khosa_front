@@ -9,6 +9,7 @@ import { ToastContainer } from 'react-toastify';
 import { NavLink } from 'react-router-dom';
 import { BiCalendar } from 'react-icons/bi';
 import { IoMdAddCircle } from "react-icons/io";
+import Dropdown from '../../components/Dropdown';
 import { RxCross1 } from 'react-icons/rx';
 import { toast } from 'react-toastify';
 import CustomTooltip from '../../components/CustomTooltip';
@@ -19,7 +20,7 @@ const ManageFixtures = () => {
   const apiUrl = import.meta.env.VITE_API_URL;
 
   const [isAddFixture, setIsAddFixture] = useState(false);
-  
+
   const [fixtures, setFixtures] = useState([]);
   const [teamsList, setTeamList] = useState([]);
   const [current_season, setCurrentSeason] = useState([]);
@@ -34,11 +35,6 @@ const ManageFixtures = () => {
   const [hours, setHours] = useState('');
   const [minutes, setMinutes] = useState('');
   const [meridian, setMeridian] = useState('');
-
-
-
-
-
 
   useEffect(() => {
     const get_fixtures = async () => {
@@ -80,18 +76,7 @@ const ManageFixtures = () => {
   const submitFormData = async (e) => {
     e.preventDefault();
 
-    const match_time = hours + ':' + minutes +  meridian;
-
-    // const match_result_data = {
-    //   season: season,
-    //   matchday: matchday,
-    //   match_date: match_date,
-    //   match_time: match_time,
-    //   home_team: home_team,
-    //   away_team: away_team,
-    // }
-
-    // console.log('Fixture Result Data:', match_result_data);
+    const match_time = hours + ':' + minutes + meridian;
 
     // initialise FormData and append the object with its key
     const formData = new FormData();
@@ -117,7 +102,9 @@ const ManageFixtures = () => {
 
     if (response_data.status === '200') {
       toast.success(response_data.message);
-      window.location.reload();
+      setTimeout(() => {
+        window.location.reload();
+      }, 3000);
     } else {
       toast.error(response_data.message);
       return;
@@ -155,13 +142,51 @@ const ManageFixtures = () => {
     },
   });
 
+  // Deleting fixture function
+  const onDeleteClick = async (hashing) => {
+    if (window.confirm('Are you sure you want to delete this record?')) {
+      try {
+        const responseref = await fetch(`${apiUrl}/fixtures/delete/${hashing}`, {
+          method: 'DELETE',
+        });
+
+        const delete_response = await responseref.json();
+        // console.log('Delete respo', delete_response);
+
+        if (delete_response.status === '200') {
+          toast.success(delete_response.message);
+          setTimeout(() => {
+              window.location.reload();
+          }, 2000);
+        } else {
+          toast.error(delete_response.message);
+          return;
+        }
+
+      } catch (error) {
+        toast.error('Error deleting fixture', error);
+      }
+    }
+  };
+
+  /**
+   * Customising data to be displayed in the cell of the action column (Adding a dropdown)
+  */
+  const actionBodyTemplate = (row) => {
+    return (
+      <>
+        <Dropdown hashing={row.hashing} onDeleteClick={onDeleteClick} />
+      </>
+    )
+  };
+
   const teamBodyTemplate = (row) => {
 
     return (
       <>
 
-        <div className='flex justify-center items-center my-2'>
-          <div className="block sm:flex md:flex space-x-5">
+        <div className='flex justify-left text-sm items-center'>
+          <div className="flex md:flex space-x-4">
             <div className='font-extralight'>
               Matchday: {row.matchday}
             </div>
@@ -172,20 +197,19 @@ const ManageFixtures = () => {
           </div>
         </div>
 
-        <div className='flex justify-center items-center'>
-
+        <div className='flex justify-left items-center'>
           <div className='text-sm font-light text-center'>
-            {/* <img src="" alt="" /> */}
+            <img src={row.home_team_logo} alt="" className='h-7 w-7 mx-auto rounded-full' />
             <span className='font-bold'>{row.home_team}</span><br />
           </div>
 
-          <div className="font-bold text-red-600 mx-2 text-center">
+          <div className="font-bold text-red-600 mx-2 mt-10 text-center">
             <span className='font-bold'>vs</span><br />
-            
+            <span className='font-extralight text-sm'>{row.time}</span><br />
           </div>
 
           <div className='text-sm font-light text-center'>
-            {/* <img src="" alt="" /> */}
+            <img src={row.away_team_logo} alt="" className='h-7 w-7 mx-auto rounded-full' />
             <span className='font-bold'>{row.away_team}</span><br />
           </div>
         </div>
@@ -195,12 +219,12 @@ const ManageFixtures = () => {
 
   return (
     <>
-      <div className='grow p-2 h-full md:h-screen lg:h-screen bg-gray-100 ml-16 md:ml-0'>
+      <div className='grow p-2 h-full bg-gray-100 mb-10 ml-16 md:ml-0'>
         <div className="items-center my-2">
           {(!isAddFixture) ?
-            <h2 className="text-md text-left text-blue-900 font-bold my-auto">FIXTURES</h2>
+            <h2 className="text-md text-left text-teal-500 font-bold my-auto">FIXTURES</h2>
             :
-            <h2 className="text-md text-left text-blue-900 font-bold my-auto">ADD FIXTURE</h2>
+            <h2 className="text-md text-left text-teal-500 font-bold my-auto">ADD FIXTURE</h2>
           }
         </div>
         <div className='grid '>
@@ -218,7 +242,6 @@ const ManageFixtures = () => {
 
           {(isAddFixture) &&
             <div className="flex border-0 w-full">
-
               <form onSubmit={submitFormData} className='space-y-4 w-full shadow-xl/20 ring-1 ring-gray-200 my-2 bg-white text-black rounded p-4' >
 
                 <div className="block md:flex space-x-6">
@@ -283,7 +306,7 @@ const ManageFixtures = () => {
                         onChange={(e) => setHours(e.target.value)}
                         type='number'
                         min={1} max={12}
-                        className='w-full mx-2 p-1 border text-center font-bold rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 border-gray-300' 
+                        className='w-full mx-2 p-1 border text-center font-bold rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 border-gray-300'
                         placeholder='00'
                         required
                       />
@@ -294,7 +317,7 @@ const ManageFixtures = () => {
                         onChange={(e) => setMinutes(e.target.value)}
                         type='number'
                         min={0} max={59}
-                        className='w-full text-center mx-2 p-1 border font-bold rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 border-gray-300' 
+                        className='w-full text-center mx-2 p-1 border font-bold rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 border-gray-300'
                         placeholder='00'
                         required
                       />
@@ -305,7 +328,7 @@ const ManageFixtures = () => {
                         onChange={(e) => setMeridian(e.target.value)}
                         className="mt-1 block w-full text-center p-3 border font-bold rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-500 focus:ring-opacity-50"
                         required
-                      > 
+                      >
                         <option disabled value="">choose...</option>
                         <option value='AM'>PM</option>
                         <option value='PM'>AM</option>
@@ -368,7 +391,6 @@ const ManageFixtures = () => {
                 </div>
 
               </form>
-
             </div>
           }
 
@@ -390,7 +412,7 @@ const ManageFixtures = () => {
                 tableStyle={{ minWidth: '10rem' }}
                 filters={filters}
                 globalFilterFields={['combinedColumns']}
-                className='datatable-responsive mt-6'
+                className='datatable-responsive mt-6 w-fit md:w-full'
                 currentPageReportTemplate='showing {first} to {last} of {totalRecords} results'
                 paginatorTemplate='FirstPageLink PrevPageLink PageLinks NextPageLink LastPageLink CurrentPageReport RowsPerPageDropdown'
                 removableSort
@@ -402,6 +424,7 @@ const ManageFixtures = () => {
                 rowsPerPageOptions={[10, 20, 30, 40, 50, fixtures.length]}
               >
                 <Column body={teamBodyTemplate} ></Column>
+                <Column body={actionBodyTemplate}></Column>
               </DataTable>
             </div>
           }

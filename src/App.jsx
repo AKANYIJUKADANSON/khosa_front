@@ -24,8 +24,8 @@ import ManagePosts from './pages/posts/ManagePosts';
 import ManageGallery from './pages/gallery/ManageGallery';
 import ManagePlayers from './pages/players/ManagePlayers';
 import ManageAbout from './pages/about/ManageAbout';
-import TestResults from './pages/results/TestResults';
 import AddWallHero from './pages/teams/AddWallHero';
+import FixturePage, { fixtureLoader } from './pages/fixtures/FixturePage';
 
 
 const router = createBrowserRouter(
@@ -49,6 +49,9 @@ const router = createBrowserRouter(
         <Route path='/teams' element={ <ManageTeams />} />
         <Route path='/gallery' element={ <ManageGallery />} />
         <Route path='/about' element={ <ManageAbout />} />
+
+        <Route path='/fixtures/:hashing' element= { <FixturePage />} loader={fixtureLoader} />
+        <Route path='/fixtures/update/:hashing' element= { <FixturePage initIsUpdateFixture = {true} />} loader={fixtureLoader} />
 
         <Route path='/profile' element={ <ProfilePage />} /> 
       </Route>

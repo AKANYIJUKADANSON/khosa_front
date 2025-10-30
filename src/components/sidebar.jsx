@@ -50,7 +50,7 @@ const Sidebar = () => {
 
     return (
 
-        <div ref={sidebarRefRef} style={{ fontFamily: 'sans-serif' }} className={`bg-white z-50 mt-20 h-full pl-4 pr-0 p-2 fixed ${(toggle) ? 'w-35' : 'w-16'} md:w-64 border-r border-gray-300 shadow-lg`}>
+        <div ref={sidebarRefRef} style={{ fontFamily: 'sans-serif' }} className={`bg-white z-9 mt-20 h-full pl-4 pr-0 p-2 fixed ${(toggle) ? 'w-35' : 'w-16'} md:w-64 border-r border-gray-300 shadow-lg`}>
 
             <button
                 className="flex justify-end me-4 md:hidden  lg:hidden rounded"
