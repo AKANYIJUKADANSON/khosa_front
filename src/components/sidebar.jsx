@@ -50,7 +50,7 @@ const Sidebar = () => {
 
     return (
 
-        <div ref={sidebarRefRef} style={{ fontFamily: 'sans-serif' }} className={`bg-white z-9 mt-20 h-full pl-4 pr-0 p-2 fixed ${(toggle) ? 'w-35' : 'w-16'} md:w-64 border-r border-gray-300 shadow-lg`}>
+        <div ref={sidebarRefRef} style={{ fontFamily: 'sans-serif' }} className={`bg-white z-9 mt-20 mb-0 h-full pl-4 pr-0 p-2 fixed ${(toggle) ? 'w-35' : 'w-16'} md:w-64 overflow-y-auto h-fit border-r border-gray-300 shadow-lg`}>
 
             <button
                 className="flex justify-end me-4 md:hidden  lg:hidden rounded"
@@ -63,7 +63,7 @@ const Sidebar = () => {
                 }
             </button>
 
-            <ul className='mt-2 flex flex-col text-xl'>
+            <ul className='mt-2 flex flex-col text-xl mb-25'>
                 <NavLink
                     onClick={() => setToggle(false)}
                     to={'/dashboard'}

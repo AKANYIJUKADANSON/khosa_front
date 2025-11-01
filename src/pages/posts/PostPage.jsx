@@ -1,27 +1,27 @@
-import { DataTable } from 'primereact/datatable';
-import { Column } from 'primereact/column';
-import { FilterMatchMode } from 'primereact/api';
-import { InputText } from 'primereact/inputtext';
-import 'primereact/resources/themes/soho-light/theme.css';
-
 import React, { useEffect, useState } from 'react';
 import { ToastContainer } from 'react-toastify';
-import { NavLink } from 'react-router-dom';
-import { BiCalendar } from 'react-icons/bi';
+import { NavLink, useNavigate } from 'react-router-dom';
+import { BiCalendar, BiPencil, BiTrash } from 'react-icons/bi';
+import { useLoaderData } from 'react-router-dom';
 import { IoMdAddCircle, IoMdCloudUpload } from "react-icons/io";
 import { RxCross1 } from 'react-icons/rx';
 import { toast } from 'react-toastify';
 import CustomTooltip from '../../components/CustomTooltip';
 import { IoClose } from 'react-icons/io5';
+import { BsFillTrashFill, BsPencil } from 'react-icons/bs';
 
 
-const ManagePosts = () => {
+const PostPage = () => {
   // If used vite to create the react app
   const apiUrl = import.meta.env.VITE_API_URL;
 
-  const [posts, setPosts] = useState([]);
-  const [isAddPost, setIsAddPost] = useState(false);
-  const [showFullDescription, setShowFullDescription] = useState(false);
+  const navigate = useNavigate();
+
+  // Get the fixture data from the loader
+  const selected_post = useLoaderData();
+  console.log('Selected_post', selected_post);
+  
+  const [isUpdatePost, setIsUpdatePost] = useState(false);
   const [current_season, setCurrentSeason] = useState([]);
 
   const [title, setTitle] = useState('');
@@ -34,13 +34,6 @@ const ManagePosts = () => {
   const [postFilePreviewUrl, setPostFilePreviewUrl] = useState('');
 
   useEffect(() => {
-    const get_posts = async () => {
-      const posts = await fetch(`${apiUrl}/posts`);
-      const data = await posts.json();
-      console.log("posts: ", data.posts);
-      setPosts(data.posts);
-    }
-
     const get_current_season = async () => {
       const current_season = await fetch(`${apiUrl}/current_season`);
       const data = await current_season.json();
@@ -49,7 +42,6 @@ const ManagePosts = () => {
     }
 
     get_current_season();
-    get_posts();
   }, [apiUrl]);
 
   // Validating the file type
@@ -83,66 +75,65 @@ const ManagePosts = () => {
     }
   };
 
+  // Deleting fixture function
+  const deletePost = async (hashing) => {
+    if (window.confirm('Are you sure you want to delete this record? This process is irreversible!')) {
+        const formData = new FormData();
+        formData.append('file_to_delete_link', selected_post.attachment);
+        
+        const responseref = await fetch(`${apiUrl}/posts/delete/${hashing}`, {
+          method: 'POST',
+          body: formData
+        });
 
-  /**
-   * ----------------------------------------------------------------------------------------------
-   * ------------------------------ TABLE DATA ----------------------------------------------------
-   * ----------------------------------------------------------------------------------------------
-  */
+        const delete_response = await responseref.json();
+        console.log('Delete respo', delete_response);
 
-  const data = posts.map((post) => ({
-    ...post,
-    combinedColumns: `
-                  ${post.title} 
-                  ${post.body} 
-                  ${post.created_on} 
-                  ${post.type} 
-                  ${post.season} 
-              `,
-  }));
+        if (delete_response.status == '200') {
+          toast.success(delete_response.message);
+          setTimeout(() => {
+              navigate('/posts');
+          }, 2000);
+        } else {
+          toast.error(delete_response.message);
+          return;
+        }
+    }
+  };
 
-  const [filters, setFilters] = useState({
-    global: {
-      value: null,
-      matchMode: FilterMatchMode.CONTAINS
-    },
 
-    // Setting filter for the filter from many field values
-    combinedColumns: {
-      value: null,
-      matchMode: FilterMatchMode.CONTAINS
-    },
-  });
-
-  const postBodyTemplate = (row) => {
-
-    return (
-      <>
-        <NavLink to={`/posts/${row.hashing}`} className="hover:text-blue-800 cursor-pointer" >
-          <div className='block md:flex justify-start  items-center'>
-            <div className="hidden md:flex lg:flex">
-              <img src={row.attachment} className="w-fit h-fit md:w-50 mx-2 rounded" />
-            </div>
-            <div className="md:ms-6">
-              <div className="text-md text-blue-900 font-bold my-4 md:my-0 lg:my-0">{row.title}</div>
-              <div className="text-sm">
-                {(!showFullDescription) ? row.body.slice(0, 99, ) + ' ........' : row.body}
-                
-              </div>
-            </div>
-
-          </div>
-        </NavLink>
-      </>
-    )
-  }
+  useEffect(() => {
+    if (selected_post) {
+      setSeasonId(selected_post.season_id);
+      setTitle(selected_post.title);
+      setBody(selected_post.body);
+      setPostType(selected_post.type);
+      setCreatedOn(selected_post.created_on);
+      setPostFile(selected_post.attachment);
+      setPostFilePreviewUrl(selected_post.attachment);
+    }
+  }, [apiUrl,selected_post ]);
 
   // capture and set data
   const submitFormData = async (e) => {
     e.preventDefault();
 
+    // const dt = {
+    //   'post_file': post_file,
+    //   'title': title,
+    //   'body': body,
+    //   'created_on': created_on,
+    //   'post_type': post_type,
+    //   'season_id': season_id,
+    // }
+
+    // console.log("Updated_data:", dt);
+
     // initialise FormData and append the object with its key
     const formData = new FormData();
+
+    // if the a new file is selected then send the old file link along
+    formData.append('old_post_file_link', selected_post.attachment);
 
     /**
      * If an attachment was added, upload it too
@@ -157,14 +148,14 @@ const ManagePosts = () => {
     formData.append('season_id', season_id);
 
     //Send data to the backend
-    const add_post = await fetch(`${apiUrl}/add_post`, {
+    const update_post = await fetch(`${apiUrl}/posts/update/${selected_post.hashing}`, {
       method: 'POST',
       body: formData
     });
 
-    const response_data = await add_post.json();
+    const response_data = await update_post.json();
 
-    console.log("CI_3 Response: ", response_data);
+    // console.log("CI_3 Response: ", response_data);
 
     if (response_data.status === '200') {
       toast.success(response_data.message);
@@ -180,13 +171,19 @@ const ManagePosts = () => {
 
   return (
     <>
-      <div className='grow p-2 h-full md:h-screen lg:h-full bg-gray-100 ml-16 md:ml-0'>
+      <div className='grow p-2 h-full md:h-screen lg:h-full bg-gray-100 ml-16 md:ml-0 mb-20'>
         <div className="items-center my-2">
-          {(!isAddPost) ?
-            <h2 className="text-md text-left text-teal-500 font-bold my-auto">POSTS</h2>
-            :
-            <h2 className="text-md text-left text-teal-500 font-bold my-auto">ADD POST</h2>
-          }
+          <div className="text-md text-left text-gray-500 font-semibold my-auto">
+            <NavLink to='/dashboard' className=' hover:text-blue-800' >
+            Home/
+            </NavLink>
+            <span> 
+              <NavLink to='/posts' className=' hover:text-blue-800' >
+              posts
+              </NavLink>
+              /{(!isUpdatePost) ? 'details' : 'update' }
+               </span>
+          </div>
         </div>
 
         <div className='grid '>
@@ -202,7 +199,7 @@ const ManagePosts = () => {
             pauseOnHover
           />
 
-          {(isAddPost) &&
+          {(isUpdatePost) &&
             <div className="flex border-0 w-full">
 
               <form onSubmit={submitFormData} className='space-y-4 w-full shadow-sm ring-1 ring-gray-200 my-2 bg-white text-black rounded p-4' >
@@ -256,18 +253,18 @@ const ManagePosts = () => {
                 </div>
 
                 <div className="block space-x-6">
-                    <label className='block mb-2 '>Title*</label>
-                    <input type='text' name='title' className='w-full p-2 border rounded' placeholder='Enter post title' required
-                        value={title}
-                        onChange={(e) => setTitle(e.target.value)}
-                    />
+                  <label className='block mb-2 '>Title*</label>
+                  <input type='text' name='title' className='w-full p-2 border rounded' placeholder='Enter post title' required
+                    value={title}
+                    onChange={(e) => setTitle(e.target.value)}
+                  />
                 </div>
 
                 <div className="block space-x-6">
                   <label className='block mb-2'>Description*</label>
                   <textarea name='body' className='w-full p-2 border rounded' placeholder='Enter post description' required
-                      value={body}
-                      onChange={(e) => setBody(e.target.value)}
+                    value={body}
+                    onChange={(e) => setBody(e.target.value)}
                   ></textarea>
                 </div>
 
@@ -286,7 +283,7 @@ const ManagePosts = () => {
                             </>
 
                             : (
-                              <div className="relative w-full">  {/* h-48 height of container, fixed h-48 here (inherits from label) */}
+                              <div className="relative w-full"> 
                                 <img
                                   className="w-full rounded-lg object-contain"
                                   src={postFilePreviewUrl}
@@ -319,11 +316,9 @@ const ManagePosts = () => {
                   </div>
                 </div>
 
-
-
                 <div className='mt-10'>
                   <div className='space-x-5 my-2 flex justify-start'>
-                    <button type='submit' className='cursor-pointer px-4 py-2 bg-teal-700 hover:bg-teal-700 text-white rounded font-light'>SUBMIT</button>
+                    <button type='submit' className='cursor-pointer px-4 py-2 bg-teal-700 hover:bg-teal-700 text-white rounded font-light'>UPDATE</button>
                   </div>
                 </div>
 
@@ -332,57 +327,83 @@ const ManagePosts = () => {
             </div>
           }
 
-          {(!isAddPost) &&
-            <div className="w-full flex flex-col overflow-auto bg-white px-4">
-              <div className="mt-2">
-                <InputText
-                  className='border border-black p-2 my-auto float-right' placeholder="Filter ..."
-                  onInput={(e) =>
-                    setFilters({
-                      ...filters,
-                      global: { value: e.target.value, matchMode: FilterMatchMode.CONTAINS }
-                    })
-                  }
-                />
+          {(!isUpdatePost) &&
+            <div className="flex border-0 w-full ">
+              <div className=' w-full shadow-xl/20 ring-1 ring-gray-200 my-2 bg-white text-black rounded p-4 justify-center items-center' >
+
+                <div className='flex justify-left text-sm items-center'>
+                  <div className="block min-[450px]:flex space-x-4">
+                    <div className='font-light md:text-md'>
+                      Season: <span className='text-teal-900 text-md font-bold'>{selected_post.season}</span>
+                    </div>
+
+                    <div className='font-light md:text-md'>
+                      Posted On: <span className='text-teal-900 text-md font-bold'>{selected_post.created_on}</span>
+                    </div>
+
+                  </div>
+                </div>
+                <hr />
+
+                <div className='my-6'>
+
+                  <div className="block md:flex space-x-4">  
+                    <div className='w-full md:w-60/100'>
+                      <img src={selected_post.attachment} alt="" className='w-full rounded' />
+                    </div>
+
+                    <div className="font-bold text-sm w-full md:w-40/100 min-[450px]:text-md ">
+                      <div className="flex w-full">
+                        <span className='font-bold text-lg text-blue-800 overflow-hidden'>{selected_post.title}</span>
+                      </div>
+
+                      <div className="flex w-full my-4">
+                        <p className='font-light break-words overflow-hidden'>{selected_post.body}</p>
+                      </div>
+                    </div>
+                  </div>
+
+                  <hr className='mt-10' />
+
+                  <div className='block min-[450px]:flex text-sm justify-between'>
+                    <div className="">
+                      <span className='font-bold text-gray-400 italic'>Type: {selected_post.type}</span>
+                    </div>
+
+                    <div className="">
+                      {selected_post.author ? 
+                        <span className='font-bold text-gray-400 italic '>Author: {selected_post.author}</span>
+                      : ''}
+                    </div>
+                  </div>
+                </div>
               </div>
-              {/* <div className='overflow-auto'> */}
-              <DataTable value={data}
-                // ref={data}
-                tableStyle={{ minWidth: '10rem' }}
-                filters={filters}
-                globalFilterFields={['combinedColumns']}
-                className='datatable-responsive mt-6'
-                currentPageReportTemplate='showing {first} to {last} of {totalRecords} results'
-                paginatorTemplate='FirstPageLink PrevPageLink PageLinks NextPageLink LastPageLink CurrentPageReport RowsPerPageDropdown'
-                removableSort
-                dataKey='id'
-                emptyMessage='No results available'
-                paginator
-                rows={10}
-                sortMode="multiple"
-                rowsPerPageOptions={[10, 20, 30, 40, 50, posts.length]}
-              >
-                <Column body={postBodyTemplate} sortable sortField='title' header='Post' ></Column>
-                <Column field='created_on' align={'center'} sortable header='Posted' ></Column>
-              </DataTable>
-              {/* </div> */}
             </div>
           }
 
         </div>
       </div>
 
-      {(!isAddPost) ?
-        <NavLink
-          onClick={() => setIsAddPost(true)}
-          className="bg-teal-500 text-white p-2 md:p-3 shadow-lg fixed  rounded-full bottom-7 right-4 hover:bg-teal-700 flex items-center justify-center">
-          <IoMdAddCircle className='text-4xl' />
-        </NavLink>
+      {(!isUpdatePost) ?
+      <>
+          <NavLink
+            onClick={() => setIsUpdatePost(true)}
+            className="bg-teal-500 text-white p-2 md:p-3 shadow-lg fixed  rounded-full bottom-7 right-4 hover:bg-teal-700 flex items-center justify-center">
+            <BiPencil className='text-lg md:text-4xl' />
+          </NavLink>
+
+          <NavLink
+            onClick={()=> deletePost(selected_post.hashing)}
+            className="bg-red-500 text-white p-2 md:p-3 shadow-lg fixed  rounded-full 
+              bottom-7 right-15 md:right-25 hover:bg-red-800 flex items-center justify-center">
+            <BsFillTrashFill className='text-lg md:text-4xl' />
+          </NavLink>
+        </>
         :
         <NavLink
-          onClick={() => setIsAddPost(false)}
+          onClick={() => setIsUpdatePost(false)}
           className="bg-red-500 text-white p-2 md:p-3 shadow-lg fixed  rounded-full bottom-7 right-4 hover:bg-red-700 flex items-center justify-center">
-          <RxCross1 className='text-4xl' />
+          <RxCross1 className='text-lg md:text-4xl' />
         </NavLink>
       }
 
@@ -390,6 +411,23 @@ const ManagePosts = () => {
   )
 }
 
-export default ManagePosts
+
+// Fetch and export the fixture data using dataloader
+const postLoader = async ({ params }) => {
+  // If used vite to create the react app
+  const apiUrl = import.meta.env.VITE_API_URL;
+
+  // Get the hashed_id parameter sent in the link in the App.js file with the dataloader
+  // The id parameter used in the App.js file should be the same as that used here
+  const response = await fetch(`${apiUrl}/posts/${params.hashing}`);
+  const data = await response.json();
+  if (!response.ok) {
+    throw new Error('Failed to fetch post data');
+  }
+  // console.log(params.hashing);
+  return data.post;
+};
+
+export { PostPage as default, postLoader }
 
 

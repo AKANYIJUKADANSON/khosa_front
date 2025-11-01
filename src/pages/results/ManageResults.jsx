@@ -50,7 +50,7 @@ const ManageResults = () => {
     const get_results = async () => {
       const results = await fetch(`${apiUrl}/results`);
       const data = await results.json();
-      // console.log("Match results: ", data.results);
+      console.log("Match results: ", data.results);
       setResults(data.results);
     }
 
@@ -96,18 +96,23 @@ const ManageResults = () => {
     if (!acc[player.team_id]) {
       acc[player.team_id] = [];
     }
-    acc[player.team_id].push(player.name);
+    // Adding the name of the players to the list
+    acc[player.team_id].push(player.player_name);
     return acc;
   }, {});
 
   // Update datalist based on selected team
   const updateDatalist = (teamType) => {
     const teamId = formData[`${teamType}_team`];
+    // console.log('Selected_team_id:', teamId);
     const players = playersByTeam[teamId] || [];
+    // console.log('home_players:', players);
     if (teamType === 'home') {
       setHomePlayers(players);
+      console.log('home_players:', players);
     } else {
       setAwayPlayers(players);
+      console.log('away_players:', players);
     }
   };
 
@@ -202,7 +207,7 @@ const ManageResults = () => {
         setTimeout(() => {
           window.location.reload();
         }, 4000);
-        
+
       } else {
         toast.error(response_data.message);
         return;
@@ -249,42 +254,94 @@ const ManageResults = () => {
 
     return (
       <>
-        <div className='flex justify-center items-center my-2'>
-          <div className="block sm:flex md:flex space-x-5">
-            <div className='font-extralight'>
-              Matchday: {row.matchday}
+        <NavLink to={`/results/${row.hashing}`} className="hover:text-blue-800 cursor-pointer" >
+          <div className='flex max-[600px]:justify-center sm:justify-left text-sm items-center'>
+            <div className="flex space-x-5">
+              <div className='font-extralight'>
+                Matchday: <span>{row.matchday}</span>
+              </div>
+
+              <div className='font-extralight'>
+                Date: <span>{row.match_date}</span>
+              </div>
+            </div>
+          </div>
+
+          <div className='flex max-[600px]:justify-center sm:justify-left items-center my-2'>
+
+            <div className='text-sm font-light items-center text-center max-[450px]:block flex'>
+              <img src={row.home_team_logo} alt="" className='h-7 w-7  mx-auto rounded-full' />
+              <span className='font-bold'>{row.home_team}</span><br />
+              {/* <span className='font-bold'>{row.home_team_goals}</span> */}
             </div>
 
-            <div className='font-extralight'>
-              Date: {row.match_date}
+            <div className="font-bold text-teal-600 mx-3 bg-teal-100 shadow-md px-1 rounded md:mx-4 flex justify-center items-center ">
+              <div className="flex">
+                <span className='font-bold'>{row.home_team_goals}</span>
+              </div>
+
+              <div className="flex">
+                <span className='font-bold mx-3 -mt-1 my-auto text-3xl'>-</span>
+              </div>
+
+              <div className="flex">
+                <span className='font-bold'>{row.away_team_goals}</span>
+              </div>
+
+              {/* <span className='font-bold'>vs</span><br /> */}
+              {/* <span className=' text-teal-500 font-bold text-sm'>
+                {(row.win_type === 'Walkover') ? 'W' : 'N'}
+              </span> */}
+            </div>
+
+            <div className='text-sm font-light items-center text-center max-[450px]:block flex'>
+              <img src={row.away_team_logo} alt="" className='h-7 w-7 mx-auto rounded-full' />
+              <span className='font-bold'>{row.away_team}</span><br />
+              {/* <span className='font-bold'>{row.away_team_goals}</span> */}
             </div>
           </div>
-        </div>
-
-        <div className='flex justify-center items-center'>
-
-          <div className='text-sm font-light text-center'>
-            {/* <img src="" alt="" /> */}
-            <span className='font-bold'>{row.home_team}</span><br />
-            <span className='font-bold'>{row.home_team_goals}</span>
-          </div>
-
-          <div className="font-bold text-red-600 mx-2 text-center">
-            <span className='font-bold'>vs</span><br />
-            <span className=' text-teal-500 font-bold text-sm'>
-              {(row.win_type === 'Walkover') ? 'W' : 'N'}
-            </span>
-          </div>
-
-          <div className='text-sm font-light text-center'>
-            {/* <img src="" alt="" /> */}
-            <span className='font-bold'>{row.away_team}</span><br />
-            <span className='font-bold'>{row.away_team_goals}</span>
-          </div>
-        </div>
+        </NavLink>
       </>
     )
   }
+
+  /**
+   * Customising data to be displayed in the cell of the action column (Adding a dropdown)
+  */
+  const actionBodyTemplate = (row) => {
+    return (
+      <>
+        <Dropdown hashing={row.hashing} onDeleteClick={onDeleteClick} />
+      </>
+    )
+  };
+
+  // Deleting result function
+  const onDeleteClick = async (hashing) => {
+    if (window.confirm('Are you sure you want to delete this record?')) {
+      try {
+        const responseref = await fetch(`${apiUrl}/results/delete/${hashing}`, {
+          method: 'DELETE',
+        });
+
+        const delete_response = await responseref.json();
+        console.log('Delete respo', delete_response);
+
+        // if (delete_response.status === '200') {
+        //   toast.success(delete_response.message);
+        //   setTimeout(() => {
+        //     window.location.reload();
+        //   }, 2000);
+        // } else {
+        //   toast.error(delete_response.message);
+        //   return;
+        // }
+
+      } catch (error) {
+        toast.error('Error deleting fixture', error);
+      }
+    }
+  };
 
   return (
     <>
@@ -339,7 +396,7 @@ const ManageResults = () => {
                       onChange={handleInputChange}
                       className=" overflow-auto block w-full p-3 border rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-500 focus:ring-opacity-50"
                       required
-                      
+
                     >
                       <option disabled value="">Choose...</option>
                       {matchdayList.map((matchday) => (
@@ -373,10 +430,10 @@ const ManageResults = () => {
                       required
                     >
                       <option disabled value="">Choose...</option>
-                      
-                        <option value='Normal'>Normal</option>
-                        <option value='Walkover'>WalkOver</option>
-                      
+
+                      <option value='Normal'>Normal</option>
+                      <option value='Walkover'>WalkOver</option>
+
                     </select>
                   </div>
 
@@ -574,7 +631,7 @@ const ManageResults = () => {
               </form>
             </div >
           }
-          
+
           {(!isAddResult) &&
             <div className="w-full flex flex-col overflow-auto bg-white px-4">
               <div className="mt-2">
@@ -588,7 +645,7 @@ const ManageResults = () => {
                   }
                 />
               </div>
-              {/* <div className='overflow-auto'> */}
+              
               <DataTable value={data}
                 // ref={data}
                 tableStyle={{ minWidth: '10rem' }}
@@ -598,10 +655,7 @@ const ManageResults = () => {
                 currentPageReportTemplate='showing {first} to {last} of {totalRecords} results'
                 paginatorTemplate='FirstPageLink PrevPageLink PageLinks NextPageLink LastPageLink CurrentPageReport RowsPerPageDropdown'
                 removableSort
-                // showGridlines
-                // stripedRows
                 dataKey='id'
-                // header={header}
                 emptyMessage='No results available'
                 paginator
                 rows={10}
@@ -610,7 +664,6 @@ const ManageResults = () => {
               >
                 <Column body={teamBodyTemplate} ></Column>
               </DataTable>
-              {/* </div> */}
             </div>
           }
 

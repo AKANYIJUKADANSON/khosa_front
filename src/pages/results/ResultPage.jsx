@@ -1,22 +1,25 @@
-import { DataTable } from 'primereact/datatable';
-import { Column } from 'primereact/column';
-import { FilterMatchMode } from 'primereact/api';
-import { InputText } from 'primereact/inputtext';
-import 'primereact/resources/themes/soho-light/theme.css';
-
-
 import React, { useEffect, useState } from 'react';
 import { ToastContainer } from 'react-toastify';
+import { useLoaderData } from 'react-router-dom';
 import { NavLink } from 'react-router-dom';
 import { IoMdAddCircle } from "react-icons/io";
 import { RxCross1 } from 'react-icons/rx';
-// import { toast } from 'react-toastify';
+import { toast } from 'react-toastify';
 import CustomTooltip from '../../components/CustomTooltip';
+import { FaPencil } from 'react-icons/fa6';
+import { BiPencil } from 'react-icons/bi';
 
-const TestResults = () => {
+const ResultPage = ({ initIsUpdateResult }) => {
 
     const apiUrl = import.meta.env.VITE_API_URL;
-    const [isAddResult, setIsAddResult] = useState(false);
+
+    // Get the fixture data from the loader
+    const selected_result = useLoaderData();
+    // console.log('Selected_result', selected_result);
+
+    const [isUpdateResult, setIsUpdateResult] = useState(initIsUpdateResult ? initIsUpdateResult : false);
+    const [homeTeamMatchScorers, setHomeTeamMatchScorers] = useState([]);
+    const [awayTeamMatchScorers, setAwayTeamMatchScorers] = useState([]);
 
     // State for form inputs
     const [formData, setFormData] = useState({
@@ -31,13 +34,13 @@ const TestResults = () => {
         away_had_lady: false,
         home_scorers: [{ name: '', goals: '' }],
         away_scorers: [{ name: '', goals: '' }],
+        win_type: '',
     });
 
     // State for player datalists
     const [homePlayers, setHomePlayers] = useState([]);
     const [awayPlayers, setAwayPlayers] = useState([]);
 
-    const [results, setResults] = useState([]);
     const [teamsList, setTeamList] = useState([]);
     const [players, setPlayersList] = useState([]);
     const [seasonList, setSeasonList] = useState([]);
@@ -45,67 +48,80 @@ const TestResults = () => {
 
 
     useEffect(() => {
-        const get_results = async () => {
-            const results = await fetch(`${apiUrl}/results`);
-            const data = await results.json();
-            // console.log("Match results: ", data.results);
-            setResults(data.results);
-        }
 
         const get_teams = async () => {
             const teams_list = await fetch(`${apiUrl}/teams`);
             const data = await teams_list.json();
-            console.log("Teams_list: ", data.teams);
+            // console.log("Teams_list: ", data.teams);
             setTeamList(data.teams);
         }
 
         const get_players_list = async () => {
             const players_list = await fetch(`${apiUrl}/players`);
             const data = await players_list.json();
-            console.log("Players_list: ", data.players);
+            // console.log("Players_list: ", data.players);
             setPlayersList(data.players);
         }
 
         const get_season_list = async () => {
             const seasons_list = await fetch(`${apiUrl}/seasons`);
             const data = await seasons_list.json();
-            console.log("Seasons_list: ", data.seasons);
+            // console.log("Seasons_list: ", data.seasons);
             setSeasonList(data.seasons);
         }
-
 
         const get_matchday_list = async () => {
             const matchday_list = await fetch(`${apiUrl}/matchdays`);
             const data = await matchday_list.json();
-            console.log("Matchday_list: ", data.matchdays);
+            // console.log("Matchday_list: ", data.matchdays);
             setMatchdayList(data.matchdays);
         }
 
+        const get_home_team_match_goals = async () => {
+            const home_team_match_goals = await fetch(`${apiUrl}/results/match_goals/${selected_result.id}/${selected_result.home_team_id}`);
+            const data = await home_team_match_goals.json();
+            // console.log("Home_team_match_goals: ", data.match_goals);
+            setHomeTeamMatchScorers(data.match_goals);
+        }
+
+        const get_away_team_match_goals = async () => {
+            const away_team_match_goals = await fetch(`${apiUrl}/results/match_goals/${selected_result.id}/${selected_result.away_team_id}`);
+            const data = await away_team_match_goals.json();
+            // console.log("Away_team_match_goals: ", data.match_goals);
+            setAwayTeamMatchScorers(data.match_goals);
+        }
+
+        get_away_team_match_goals();
+        get_home_team_match_goals();
         get_matchday_list();
         get_players_list();
         get_season_list();
-        get_results();
         get_teams();
 
-    }, [apiUrl]);
+    }, [apiUrl, selected_result]);
 
     // Organize players by team
     const playersByTeam = players.reduce((acc, player) => {
         if (!acc[player.team_id]) {
             acc[player.team_id] = [];
         }
-        acc[player.team_id].push(player.name);
+        // Adding the name of the players to the list
+        acc[player.team_id].push(player.player_name);
         return acc;
     }, {});
 
     // Update datalist based on selected team
     const updateDatalist = (teamType) => {
         const teamId = formData[`${teamType}_team`];
+        // console.log('Selected_team_id:', teamId);
         const players = playersByTeam[teamId] || [];
+        // console.log('home_players:', players);
         if (teamType === 'home') {
             setHomePlayers(players);
+            console.log('home_players:', players);
         } else {
             setAwayPlayers(players);
+            console.log('away_players:', players);
         }
     };
 
@@ -144,7 +160,7 @@ const TestResults = () => {
         });
     };
 
-    // Add scorer row
+    // Add scorer selected_result
     const addScorer = (team) => {
         setFormData((prev) => ({
             ...prev,
@@ -160,6 +176,7 @@ const TestResults = () => {
         // Append individual form fields
         formDataToSend.append('season_id', formData.season_id);
         formDataToSend.append('matchday_id', formData.matchday_id);
+        formDataToSend.append('win_type', formData.win_type);
         formDataToSend.append('match_date', formData.match_date);
         formDataToSend.append('home_team', formData.home_team);
         formDataToSend.append('away_team', formData.away_team);
@@ -194,13 +211,16 @@ const TestResults = () => {
 
             console.log("CI_3 Response: ", response_data);
 
-            // if (response_data.status === '200') {
-            //   toast.success(response_data.message);
-            //   window.location.reload();
-            // } else {
-            //   toast.error(response_data.message);
-            //   return;
-            // }
+            if (response_data.status === '200') {
+                toast.success(response_data.message);
+                setTimeout(() => {
+                    window.location.reload();
+                }, 4000);
+
+            } else {
+                toast.error(response_data.message);
+                return;
+            }
 
 
         } catch (error) {
@@ -210,85 +230,21 @@ const TestResults = () => {
     };
 
 
-    /**
-     * ----------------------------------------------------------------------------------------------
-     * ------------------------------ TABLE DATA ----------------------------------------------------
-     * ----------------------------------------------------------------------------------------------
-    */
-
-    const data = results.map((result) => ({
-        ...result,
-        combinedColumns: `
-                ${result.home_team} 
-                ${result.away_team}
-                ${result.home_team_goals}
-                ${result.away_team_goals}
-            `,
-    }));
-
-    const [filters, setFilters] = useState({
-        global: {
-            value: null,
-            matchMode: FilterMatchMode.CONTAINS
-        },
-
-        // Setting filter for the filter from many field values
-        combinedColumns: {
-            value: null,
-            matchMode: FilterMatchMode.CONTAINS
-        },
-    });
-
-    const teamBodyTemplate = (row) => {
-
-        return (
-            <>
-                <div className='flex justify-center items-center my-2'>
-                    <div className="block sm:flex md:flex space-x-5">
-                        <div className='font-extralight'>
-                            Matchday: {row.matchday}
-                        </div>
-
-                        <div className='font-extralight'>
-                            Date: {row.match_date}
-                        </div>
-                    </div>
-                </div>
-
-                <div className='flex justify-center items-center'>
-
-                    <div className='text-sm font-light text-center'>
-                        {/* <img src="" alt="" /> */}
-                        <span className='font-bold'>{row.home_team}</span><br />
-                        <span className='font-bold'>{row.home_team_goals}</span>
-                    </div>
-
-                    <div className="font-bold text-red-600 mx-2 text-center">
-                        <span className='font-bold'>vs</span><br />
-                        <span className=' text-teal-500 font-bold text-sm'>
-                            {(row.win_type === 'Walkover') ? 'W' : 'N'}
-                        </span>
-                    </div>
-
-                    <div className='text-sm font-light text-center'>
-                        {/* <img src="" alt="" /> */}
-                        <span className='font-bold'>{row.away_team}</span><br />
-                        <span className='font-bold'>{row.away_team_goals}</span>
-                    </div>
-                </div>
-            </>
-        )
-    }
-
     return (
         <>
-            <div className='grow p-2 h-full md,lg:h-screen bg-gray-100 ml-16 md:ml-0'>
+            <div className={`grow p-2 ${isUpdateResult ? 'h-full' : 'h-screen'}  h-full bg-gray-200 ml-16 md:ml-0`}>
                 <div className="items-center my-2">
-                    {(!isAddResult) ?
-                        <h2 className="text-md text-left text-blue-900 font-bold my-auto">CURRENT RESULTS</h2>
-                        :
-                        <h2 className="text-md text-left text-blue-900 font-bold my-auto">ADD MATCH RESULT</h2>
-                    }
+                    <div className="text-md text-left text-gray-500 font-semibold my-auto">
+                        <NavLink to='/dashboard' className=' hover:text-blue-800' >
+                            Home/
+                        </NavLink>
+                        <span>
+                            <NavLink to='/results' className=' hover:text-blue-800' >
+                                results
+                            </NavLink>
+                            /{(!isUpdateResult) ? 'details' : 'update'}
+                        </span>
+                    </div>
                 </div>
                 <div className='grid '>
 
@@ -303,7 +259,7 @@ const TestResults = () => {
                         pauseOnHover
                     />
 
-                    {(!isAddResult) &&
+                    {(isUpdateResult) &&
                         <div className="flex border-0 w-full">
                             <form onSubmit={handleSubmit} className='space-y-4 w-full shadow-xl/20 ring-1 ring-gray-200 my-2 bg-white text-black rounded p-4'>
                                 <div className="block md:flex space-x-6">
@@ -328,11 +284,12 @@ const TestResults = () => {
                                     <div className='w-full'>
                                         <label>Matchday: </label>
                                         <select
-                                            name="matchday"
+                                            name="matchday_id"
                                             value={formData.matchday_id}
                                             onChange={handleInputChange}
-                                            className=" block w-full p-3 border rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-500 focus:ring-opacity-50"
+                                            className=" overflow-auto block w-full p-3 border rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-500 focus:ring-opacity-50"
                                             required
+
                                         >
                                             <option disabled value="">Choose...</option>
                                             {matchdayList.map((matchday) => (
@@ -354,6 +311,23 @@ const TestResults = () => {
                                             className='w-full p-3 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 border-gray-300'
 
                                         />
+                                    </div>
+
+                                    <div className='w-full'>
+                                        <label>Win Type: </label>
+                                        <select
+                                            name="win_type"
+                                            value={formData.win_type}
+                                            onChange={handleInputChange}
+                                            className=" block w-full p-3 border rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-500 focus:ring-opacity-50"
+                                            required
+                                        >
+                                            <option disabled value="">Choose...</option>
+
+                                            <option value='Normal'>Normal</option>
+                                            <option value='Walkover'>WalkOver</option>
+
+                                        </select>
                                     </div>
 
 
@@ -380,7 +354,7 @@ const TestResults = () => {
                                     </div>
 
                                     <div className='w-fit flex justify-center items-center'>
-                                        <span className='font-bold text-center text-2xl text-teal-500'> vs </span>
+                                        <span className='font-bold text-center text-xl text-red-500'> vs </span>
                                     </div>
 
                                     <div className='w-full'>
@@ -470,7 +444,7 @@ const TestResults = () => {
 
                                     <div id="home_scorers" className="">
                                         {formData.home_scorers.map((scorer, index) => (
-                                            <div key={`home_scorer_${index}`} className="scorer-row my-2">
+                                            <div key={`home_scorer_${index}`} className="scorer-selected_result my-2">
                                                 <label>Name: </label>
                                                 <input
                                                     type="text"
@@ -510,7 +484,7 @@ const TestResults = () => {
                                     <label>Away Scorers:</label>
                                     <div id="away_scorers">
                                         {formData.away_scorers.map((scorer, index) => (
-                                            <div key={`away_scorer_${index}`} className="scorer-row my-2">
+                                            <div key={`away_scorer_${index}`} className="scorer-selected_result my-2">
                                                 <label>Name: </label>
                                                 <input
                                                     type="text"
@@ -550,59 +524,129 @@ const TestResults = () => {
                             </form>
                         </div >
                     }
-                    {(isAddResult) &&
-                        <div className="w-full flex flex-col overflow-auto bg-white px-4">
-                            <div className="mt-2">
-                                <InputText
-                                    className='border border-black p-2 my-auto float-right' placeholder="Filter ..."
-                                    onInput={(e) =>
-                                        setFilters({
-                                            ...filters,
-                                            global: { value: e.target.value, matchMode: FilterMatchMode.CONTAINS }
-                                        })
-                                    }
-                                />
+
+                    {(!isUpdateResult) &&
+                        <div className="flex border-0 w-full ">
+                            <div className=' w-full shadow-xl/20 ring-1 ring-gray-200 my-2 bg-white text-black rounded p-4 justify-center items-center' >
+
+                                <div className='flex justify-left text-sm items-center'>
+                                    <div className="block md:flex space-x-4">
+                                        <div className='font-light md:text-md'>
+                                            Season: <span className='text-teal-900 text-md font-bold'>{selected_result.season}</span>
+                                        </div>
+
+                                        <div className='font-light md:text-md'>
+                                            Matchday: <span className='text-teal-900 text-md font-bold'>{selected_result.matchday}</span>
+                                        </div>
+
+                                        <div className='font-light md:text-md'>
+                                            Date: <span className='text-teal-900 text-md font-bold'>{selected_result.match_date}</span>
+                                        </div>
+
+                                    </div>
+                                </div>
+                                <hr />
+
+                                <div className='flex justify-between items-center my-6'>
+
+                                    <div className='
+                                        text-sm 
+                                        min-[450px]:text-lg
+                                        min-[1020px]:text-4xl  
+                                        font-light items-center text-center max-[450px]:block flex'>
+                                        <img src={selected_result.home_team_logo} alt="" className='
+                                            h-9 w-9 
+                                            min-[1020px]:w-35 min-[1020px]:h-35 
+                                            min-[450px]:w-16 min-[450px]:h-16 
+                                            mx-auto rounded-full' />
+                                        <span className='font-bold'>{selected_result.home_team}</span><br />
+                                        {/* <span className='font-bold'>{selected_result.home_team_goals}</span> */}
+                                    </div>
+
+                                    <div className="font-bold text-teal-600
+                                        text-sm 
+                                        min-[450px]:text-2xl
+                                        min-[1020px]:text-5xl
+                                        mx-3 bg-teal-100 shadow-md px-1 md:px-5 md:py-2 rounded md:mx-4 flex justify-center items-center ">
+                                        <div className="flex">
+                                            <span className='font-bold'>{selected_result.home_team_goals}</span>
+                                        </div>
+
+                                        <div className="flex">
+                                            <span className='font-bold mx-3 -mt-1 my-auto text-3xl'>-</span>
+                                        </div>
+
+                                        <div className="flex">
+                                            <span className='font-bold'>{selected_result.away_team_goals}</span>
+                                        </div>
+                                    </div>
+
+                                    <div className='text-sm 
+                                        min-[450px]:text-lg
+                                        min-[1020px]:text-4xl  
+                                        font-light items-center text-center max-[450px]:block flex'>
+
+                                        <img src={selected_result.away_team_logo} alt="" className='
+                                            h-9 w-9 
+                                            min-[1020px]:w-35 min-[1020px]:h-35 
+                                            min-[450px]:w-16 min-[450px]:h-16 
+                                            mx-auto rounded-full' />
+                                        <span className='font-bold'>{selected_result.away_team}</span><br />
+                                    </div>
+                                </div>
+
+                                <div className='flex justify-between'>
+                                    <div className='
+                                        text-sm 
+                                        min-[450px]:text-md
+                                        min-[1020px]:text-2xl  
+                                        font-light items-start  max-[450px]:block'>
+                                        <div className="block">
+                                            {homeTeamMatchScorers.map((scorer) => (
+                                                <div className='font-light text-md justify-left items-center'>
+                                                    <span className=''>{scorer.player_name}:</span>
+                                                    <span className='me-2 font-bold'>{scorer.goals}</span>
+                                                </div>
+
+                                            ))}
+                                        </div>
+
+                                    </div>
+
+                                    <div className='
+                                        text-sm 
+                                        min-[450px]:text-md
+                                        min-[1020px]:text-2xl  
+                                        font-light text-end max-[450px]:block'>
+                                        <div className="block">
+                                            {awayTeamMatchScorers.map((scorer) => (
+                                                <div className='font-light text-md justify-end'>
+                                                    <span className=''>{scorer.player_name}:</span>
+                                                    <span className='ms-2 font-bold'>{scorer.goals}</span>
+                                                </div>
+
+                                            ))}
+                                        </div>
+
+                                    </div>
+
+                                </div>
                             </div>
-                            {/* <div className='overflow-auto'> */}
-                            <DataTable value={data}
-                                // ref={data}
-                                tableStyle={{ minWidth: '10rem' }}
-                                filters={filters}
-                                globalFilterFields={['combinedColumns']}
-                                className='datatable-responsive mt-6'
-                                currentPageReportTemplate='showing {first} to {last} of {totalRecords} results'
-                                paginatorTemplate='FirstPageLink PrevPageLink PageLinks NextPageLink LastPageLink CurrentPageReport RowsPerPageDropdown'
-                                removableSort
-                                // showGridlines
-                                // stripedRows
-                                dataKey='id'
-                                // header={header}
-                                emptyMessage='No results available'
-                                paginator
-                                rows={10}
-                                sortMode="multiple"
-                                rowsPerPageOptions={[10, 20, 30, 40, 50, results.length]}
-                            >
-                                <Column body={teamBodyTemplate} ></Column>
-                            </DataTable>
-                            {/* </div> */}
                         </div>
                     }
 
                 </div>
             </div>
 
-            {(!isAddResult) ?
+            {(!isUpdateResult) ?
                 <NavLink
-                    onClick={() => setIsAddResult(true)}
+                    onClick={() => setIsUpdateResult(true)}
                     className="bg-teal-500 text-white p-2 md:p-3 shadow-lg fixed  rounded-full bottom-7 right-4 hover:bg-teal-700 flex items-center justify-center">
-                    <CustomTooltip content={'Add Match Result'}>
-                        <IoMdAddCircle className='text-4xl' />
-                    </CustomTooltip>
+                    <BiPencil className='text-4xl' />
                 </NavLink>
                 :
                 <NavLink
-                    onClick={() => setIsAddResult(false)}
+                    onClick={() => setIsUpdateResult(false)}
                     className="bg-red-500 text-white p-2 md:p-3 shadow-lg fixed  rounded-full bottom-7 right-4 hover:bg-red-700 flex items-center justify-center">
                     <CustomTooltip content={'Cancel'}>
                         <RxCross1 className='text-4xl' />
@@ -614,4 +658,20 @@ const TestResults = () => {
     )
 }
 
-export default TestResults
+// Fetch and export the fixture data using dataloader
+const resultLoader = async ({ params }) => {
+    // If used vite to create the react app
+    const apiUrl = import.meta.env.VITE_API_URL;
+
+    // Get the hashed_id parameter sent in the link in the App.js file with the dataloader
+    // The id parameter used in the App.js file should be the same as that used here
+    const response = await fetch(`${apiUrl}/results/${params.hashing}`);
+    const data = await response.json();
+    if (!response.ok) {
+        throw new Error('Failed to fetch result data');
+    }
+    // console.log(params.hashing);
+    return data.result;
+};
+
+export { ResultPage as default, resultLoader } 

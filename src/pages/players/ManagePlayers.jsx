@@ -89,6 +89,7 @@ const ManagePlayers = () => {
     ...player,
     combinedColumns: `
                   ${player.player_name} 
+                  ${player.team_name} 
               `,
   }));
 
@@ -109,12 +110,14 @@ const ManagePlayers = () => {
 
     return (
       <>
+      <NavLink to={`/players/${row.hashing}`} className="hover:text-blue-800 cursor-pointer" >
         <div className='text-sm font-light'>
           <div className="inline-flex items-center">
             <img src={row.logo} className="w-7 h-7 md:w-10 md:h-10 mx-2 rounded-full" />
             <span className="text-sm font-bold">{row.player_name}</span>
           </div>
         </div>
+      </NavLink>
       </>
     )
   }

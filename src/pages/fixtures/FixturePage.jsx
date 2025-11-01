@@ -316,7 +316,6 @@ const FixturePage = ({ initIsUpdateFixture }) => {
 
                     {(!isUpdateFixture) &&
                         <div className="flex border-0 w-full ">
-
                             <div className='space-y-2 w-full shadow-xl/20 ring-1 ring-gray-200 my-2 bg-white text-black rounded p-4 justify-center items-center' >
 
                                 <div className='flex justify-left text-sm items-center'>
@@ -353,7 +352,6 @@ const FixturePage = ({ initIsUpdateFixture }) => {
                                     </div>
                                 </div>
                             </div>
-
                         </div>
                     }
 

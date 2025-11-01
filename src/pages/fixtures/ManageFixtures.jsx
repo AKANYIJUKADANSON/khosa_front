@@ -184,35 +184,37 @@ const ManageFixtures = () => {
 
     return (
       <>
+        <NavLink to={`/fixtures/${row.hashing}`} className="hover:text-blue-800 cursor-pointer" >
+          <div className='flex justify-left text-sm items-center'>
+            <div className="flex md:flex space-x-4">
+              <div className='font-extralight'>
+                Matchday: {row.matchday}
+              </div>
 
-        <div className='flex justify-left text-sm items-center'>
-          <div className="flex md:flex space-x-4">
-            <div className='font-extralight'>
-              Matchday: {row.matchday}
+              <div className='font-extralight'>
+                Date: {row.date}
+              </div>
+            </div>
+          </div>
+
+          <div className='flex justify-left items-center'>
+            <div className='text-sm font-light text-center'>
+              <img src={row.home_team_logo} alt="" className='h-7 w-7 mx-auto rounded-full' />
+              <span className='font-bold'>{row.home_team}</span><br />
             </div>
 
-            <div className='font-extralight'>
-              Date: {row.date}
+            <div className="font-bold text-red-600 mx-2 mt-10 text-center">
+              <span className='font-bold'>vs</span><br />
+              <span className='font-extralight text-sm'>{row.time}</span><br />
+            </div>
+
+            <div className='text-sm font-light text-center'>
+              <img src={row.away_team_logo} alt="" className='h-7 w-7 mx-auto rounded-full' />
+              <span className='font-bold'>{row.away_team}</span><br />
             </div>
           </div>
-        </div>
-
-        <div className='flex justify-left items-center'>
-          <div className='text-sm font-light text-center'>
-            <img src={row.home_team_logo} alt="" className='h-7 w-7 mx-auto rounded-full' />
-            <span className='font-bold'>{row.home_team}</span><br />
-          </div>
-
-          <div className="font-bold text-red-600 mx-2 mt-10 text-center">
-            <span className='font-bold'>vs</span><br />
-            <span className='font-extralight text-sm'>{row.time}</span><br />
-          </div>
-
-          <div className='text-sm font-light text-center'>
-            <img src={row.away_team_logo} alt="" className='h-7 w-7 mx-auto rounded-full' />
-            <span className='font-bold'>{row.away_team}</span><br />
-          </div>
-        </div>
+        </NavLink>
+        
       </>
     )
   }
