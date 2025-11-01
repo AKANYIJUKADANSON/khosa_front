@@ -5,7 +5,7 @@ import LogoComponent from './LogoComponent';
 
 
 import { NavLink } from 'react-router-dom';
-import { BiCalendar, BiSolidReport } from 'react-icons/bi';
+import { BiCalendar, BiImage, BiSolidReport } from 'react-icons/bi';
 import { HiArrowCircleLeft, HiArrowCircleRight, HiArrowSmRight } from 'react-icons/hi';
 import { GiLinkedRings } from 'react-icons/gi';
 import { GrGallery } from 'react-icons/gr';
@@ -50,7 +50,7 @@ const Sidebar = () => {
 
     return (
 
-        <div ref={sidebarRefRef} style={{ fontFamily: 'sans-serif' }} className={`bg-white z-50 mt-20 h-full pl-4 pr-0 p-2 fixed ${(toggle) ? 'w-35' : 'w-16'} md:w-64 border-r border-gray-300 shadow-lg`}>
+        <div ref={sidebarRefRef} style={{ fontFamily: 'sans-serif' }} className={`bg-white z-9 mt-20 mb-0 h-full pl-4 pr-0 p-2 fixed ${(toggle) ? 'w-35' : 'w-16'} md:w-64 overflow-y-auto h-fit border-r border-gray-300 shadow-lg`}>
 
             <button
                 className="flex justify-end me-4 md:hidden  lg:hidden rounded"
@@ -63,7 +63,7 @@ const Sidebar = () => {
                 }
             </button>
 
-            <ul className='mt-2 flex flex-col text-xl'>
+            <ul className='mt-2 flex flex-col text-xl mb-25'>
                 <NavLink
                     onClick={() => setToggle(false)}
                     to={'/dashboard'}
@@ -91,6 +91,13 @@ const Sidebar = () => {
                     to='/teams' className='flex items-center py-2 my-1 md:my-2 md:pl-2 md:mr-4 space-x-1 hover:rounded hover:cursor-pointer hover:bg-gray-200 hover:text-white'>
                     <BsPeopleFill className='text-2xl text-teal-500 md:mr-4' />
                     <span className={`${(toggle) ? 'md:inline' : 'hidden'} md:inline text-sm font-bold text-teal-500`}>Teams</span>
+                </NavLink>
+
+                <NavLink
+                    onClick={() => setToggle(false)}
+                    to='/wallhero' className='flex items-center py-2 my-1 md:my-2 md:pl-2 md:mr-4 space-x-1 hover:rounded hover:cursor-pointer hover:bg-gray-200 hover:text-white'>
+                    <BiImage className='text-2xl text-teal-500 md:mr-4' />
+                    <span className={`${(toggle) ? 'md:inline' : 'hidden'} md:inline text-sm font-bold text-teal-500`}>Wallhero</span>
                 </NavLink>
 
                 <NavLink

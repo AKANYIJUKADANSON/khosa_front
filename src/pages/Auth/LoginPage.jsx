@@ -78,7 +78,7 @@ const LoginPage = () => {
                 <div className='px-8 py-4   w-full my-auto mx-auto ' style={{ fontFamily: 'sans-serif' }}>
 
                     <div className=" flex  mx-auto justify-center align-center mb-0 my-4">
-                        <LogoComponent logoclass={"h-15 rounded-full "} />
+                        <LogoComponent logoclass={"h-30 rounded-full "} />
                     </div>
 
                     <form className="flex flex-col space-between py-2 px-2 mt-10 mb-10" method='post' onSubmit={submitLoginData} >

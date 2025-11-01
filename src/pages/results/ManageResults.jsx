@@ -1,49 +1,56 @@
+
 import { DataTable } from 'primereact/datatable';
 import { Column } from 'primereact/column';
 import { FilterMatchMode } from 'primereact/api';
 import { InputText } from 'primereact/inputtext';
 import 'primereact/resources/themes/soho-light/theme.css';
 
+
 import React, { useEffect, useState } from 'react';
 import { ToastContainer } from 'react-toastify';
 import { NavLink } from 'react-router-dom';
-import { BiCalendar } from 'react-icons/bi';
 import { IoMdAddCircle } from "react-icons/io";
 import { RxCross1 } from 'react-icons/rx';
 import { toast } from 'react-toastify';
 import CustomTooltip from '../../components/CustomTooltip';
 
 const ManageResults = () => {
-  // If used vite to create the react app
+
   const apiUrl = import.meta.env.VITE_API_URL;
-
   const [isAddResult, setIsAddResult] = useState(false);
-  const [season, setSeason] = useState('');
-  const [matchday, setMatchday] = useState('');
-  const [match_date, setMatchDate] = useState('');
 
-  const [home_team, setHomeTeam] = useState('');
-  const [away_team, setAwayTeam] = useState('');
-  const [home_had_lady, setHomeHadLady] = useState();
-  const [away_had_lady, setAwayHadLady] = useState();
+  // State for form inputs
+  const [formData, setFormData] = useState({
+    season_id: '',
+    matchday_id: '',
+    match_date: '',
+    home_team: '',
+    away_team: '',
+    home_score: '',
+    away_score: '',
+    home_had_lady: false,
+    away_had_lady: false,
+    home_scorers: [{ name: '', goals: '' }],
+    away_scorers: [{ name: '', goals: '' }],
+    win_type: '',
+  });
 
-
-  const [home_score, setHomeScore] = useState('');
-  const [away_score, setAwayScore] = useState('');
-
+  // State for player datalists
+  const [homePlayers, setHomePlayers] = useState([]);
+  const [awayPlayers, setAwayPlayers] = useState([]);
 
   const [results, setResults] = useState([]);
   const [teamsList, setTeamList] = useState([]);
+  const [players, setPlayersList] = useState([]);
   const [seasonList, setSeasonList] = useState([]);
   const [matchdayList, setMatchdayList] = useState([]);
-
 
 
   useEffect(() => {
     const get_results = async () => {
       const results = await fetch(`${apiUrl}/results`);
       const data = await results.json();
-      // console.log("Match results: ", data.results);
+      console.log("Match results: ", data.results);
       setResults(data.results);
     }
 
@@ -52,6 +59,13 @@ const ManageResults = () => {
       const data = await teams_list.json();
       console.log("Teams_list: ", data.teams);
       setTeamList(data.teams);
+    }
+
+    const get_players_list = async () => {
+      const players_list = await fetch(`${apiUrl}/players`);
+      const data = await players_list.json();
+      console.log("Players_list: ", data.players);
+      setPlayersList(data.players);
     }
 
     const get_season_list = async () => {
@@ -70,70 +84,142 @@ const ManageResults = () => {
     }
 
     get_matchday_list();
+    get_players_list();
     get_season_list();
     get_results();
     get_teams();
 
   }, [apiUrl]);
 
-  // Add a scorer
+  // Organize players by team
+  const playersByTeam = players.reduce((acc, player) => {
+    if (!acc[player.team_id]) {
+      acc[player.team_id] = [];
+    }
+    // Adding the name of the players to the list
+    acc[player.team_id].push(player.player_name);
+    return acc;
+  }, {});
+
+  // Update datalist based on selected team
+  const updateDatalist = (teamType) => {
+    const teamId = formData[`${teamType}_team`];
+    // console.log('Selected_team_id:', teamId);
+    const players = playersByTeam[teamId] || [];
+    // console.log('home_players:', players);
+    if (teamType === 'home') {
+      setHomePlayers(players);
+      console.log('home_players:', players);
+    } else {
+      setAwayPlayers(players);
+      console.log('away_players:', players);
+    }
+  };
+
+  // Initialize datalists on component mount or when teams change
+  useEffect(() => {
+    if (formData.home_team) updateDatalist('home');
+    if (formData.away_team) updateDatalist('away');
+  }, [formData.home_team, formData.away_team]);
+
+  // Handle input changes
+  const handleInputChange = (e) => {
+    const { name, value, type, checked } = e.target;
+    setFormData((prev) => ({
+      ...prev,
+      [name]: type === 'checkbox' ? checked : value,
+    }));
+  };
+
+  // Handle team selection change
+  const handleTeamChange = (e, teamType) => {
+    const { name, value } = e.target;
+    setFormData((prev) => ({
+      ...prev,
+      [name]: value,
+    }));
+    updateDatalist(teamType);
+  };
+
+  // Handle scorer input changes
+  const handleScorerChange = (e, index, team, field) => {
+    const { value } = e.target;
+    setFormData((prev) => {
+      const updatedScorers = [...prev[`${team}_scorers`]];
+      updatedScorers[index] = { ...updatedScorers[index], [field]: value };
+      return { ...prev, [`${team}_scorers`]: updatedScorers };
+    });
+  };
+
+  // Add scorer row
   const addScorer = (team) => {
-    const container = document.getElementById(team + '_scorers');
-    const row = document.createElement('div');
-    row.className = 'scorer-row';
-    row.innerHTML = `
-        Name: <input type="text" name="${team}_scorer_name[]" list="${team}_players_datalist">
-        Goals: <input type="number" name="${team}_scorer_goals[]" min="1">
-    `;
-    container.appendChild(row);
-  }
+    setFormData((prev) => ({
+      ...prev,
+      [`${team}_scorers`]: [...prev[`${team}_scorers`], { name: '', goals: '' }],
+    }));
+  };
 
-
-
-
-  // capture and set data
-  const submitFormData = async (e) => {
+  // Handle form submission
+  const handleSubmit = async (e) => {
     e.preventDefault();
 
-    const match_result_data = {
-        season : season,
-        matchday : matchday,
-        match_date : match_date,
+    const formDataToSend = new FormData();
+    // Append individual form fields
+    formDataToSend.append('season_id', formData.season_id);
+    formDataToSend.append('matchday_id', formData.matchday_id);
+    formDataToSend.append('win_type', formData.win_type);
+    formDataToSend.append('match_date', formData.match_date);
+    formDataToSend.append('home_team', formData.home_team);
+    formDataToSend.append('away_team', formData.away_team);
+    formDataToSend.append('home_score', formData.home_score);
+    formDataToSend.append('away_score', formData.away_score);
+    formDataToSend.append('home_had_lady', formData.home_had_lady ? '1' : '0');
+    formDataToSend.append('away_had_lady', formData.away_had_lady ? '1' : '0');
 
-        home_team : home_team,
-        away_team : away_team,
-        home_had_lady : home_had_lady,
-        away_had_lady : away_had_lady,
+    // Append scorer arrays
+    formData.home_scorers.forEach((scorer) => {
+      if (scorer.name && scorer.goals) { // Only append if name and goals are provided
+        formDataToSend.append('home_scorer_name[]', scorer.name);
+        formDataToSend.append('home_scorer_goals[]', scorer.goals);
+      }
+    });
+    formData.away_scorers.forEach((scorer) => {
+      if (scorer.name && scorer.goals) { // Only append if name and goals are provided
+        formDataToSend.append('away_scorer_name[]', scorer.name);
+        formDataToSend.append('away_scorer_goals[]', scorer.goals);
+      }
+    });
+
+
+    try {
+      // Send data to the backend
+      const send_match_data = await fetch(`${apiUrl}/add_result`, {
+        method: 'POST',
+        body: formDataToSend
+      });
+
+      const response_data = await send_match_data.json();
+
+      console.log("CI_3 Response: ", response_data);
+
+      if (response_data.status === '200') {
+        toast.success(response_data.message);
+        setTimeout(() => {
+          window.location.reload();
+        }, 4000);
+
+      } else {
+        toast.error(response_data.message);
+        return;
+      }
+
+
+    } catch (error) {
+      console.error('Submission error:', error);
+      alert('An error occurred while saving.');
     }
+  };
 
-    console.log('Match Result Data:', match_result_data);
-
-    // initialise FormData and append the object with its key
-    // const formData = new FormData();
-
-    // Append all data to the formdata array
-    // formData.append('season', season);
-    // formData.append('match_date', match_date);
-
-    // Send data to the backend
-    // const send_match_data = await fetch(`${apiUrl}/add_match`, {
-    //   method: 'POST',
-    //   body: formData
-    // });
-
-    // const response_data = await send_match_data.json();
-
-    // console.log("CI_3 Response: ", response_data);  
-
-    // if (response_data.status === '200') {
-    //   toast.success(response_data.message);
-    //   window.location.reload();
-    // } else {
-    //   toast.error(response_data.message);
-    //   return;
-    // }
-
-  }
 
   /**
    * ----------------------------------------------------------------------------------------------
@@ -144,11 +230,11 @@ const ManageResults = () => {
   const data = results.map((result) => ({
     ...result,
     combinedColumns: `
-            ${result.home_team} 
-            ${result.away_team}
-            ${result.home_team_goals}
-            ${result.away_team_goals}
-        `,
+                ${result.home_team} 
+                ${result.away_team}
+                ${result.home_team_goals}
+                ${result.away_team_goals}
+            `,
   }));
 
   const [filters, setFilters] = useState({
@@ -168,52 +254,103 @@ const ManageResults = () => {
 
     return (
       <>
+        <NavLink to={`/results/${row.hashing}`} className="hover:text-blue-800 cursor-pointer" >
+          <div className='flex max-[600px]:justify-center sm:justify-left text-sm items-center'>
+            <div className="flex space-x-5">
+              <div className='font-extralight'>
+                Matchday: <span>{row.matchday}</span>
+              </div>
 
-        <div className='flex justify-center items-center my-2'>
-          <div className="block sm:flex md:flex space-x-5">
-            <div className='font-extralight'>
-              Matchday: {row.matchday}
+              <div className='font-extralight'>
+                Date: <span>{row.match_date}</span>
+              </div>
+            </div>
+          </div>
+
+          <div className='flex max-[600px]:justify-center sm:justify-left items-center my-2'>
+
+            <div className='text-sm font-light items-center text-center max-[450px]:block flex'>
+              <img src={row.home_team_logo} alt="" className='h-7 w-7  mx-auto rounded-full' />
+              <span className='font-bold'>{row.home_team}</span><br />
+              {/* <span className='font-bold'>{row.home_team_goals}</span> */}
             </div>
 
-            <div className='font-extralight'>
-              Date: {row.match_date}
+            <div className="font-bold text-teal-600 mx-3 bg-teal-100 shadow-md px-1 rounded md:mx-4 flex justify-center items-center ">
+              <div className="flex">
+                <span className='font-bold'>{row.home_team_goals}</span>
+              </div>
+
+              <div className="flex">
+                <span className='font-bold mx-3 -mt-1 my-auto text-3xl'>-</span>
+              </div>
+
+              <div className="flex">
+                <span className='font-bold'>{row.away_team_goals}</span>
+              </div>
+
+              {/* <span className='font-bold'>vs</span><br /> */}
+              {/* <span className=' text-teal-500 font-bold text-sm'>
+                {(row.win_type === 'Walkover') ? 'W' : 'N'}
+              </span> */}
+            </div>
+
+            <div className='text-sm font-light items-center text-center max-[450px]:block flex'>
+              <img src={row.away_team_logo} alt="" className='h-7 w-7 mx-auto rounded-full' />
+              <span className='font-bold'>{row.away_team}</span><br />
+              {/* <span className='font-bold'>{row.away_team_goals}</span> */}
             </div>
           </div>
-        </div>
-
-        <div className='flex justify-center items-center'>
-
-          <div className='text-sm font-light text-center'>
-            {/* <img src="" alt="" /> */}
-            <span className='font-bold'>{row.home_team}</span><br />
-            <span className='font-bold'>{row.home_team_goals}</span>
-          </div>
-
-          <div className="font-bold text-red-600 mx-2 text-center">
-            <span className='font-bold'>vs</span><br />
-            <span className=' text-teal-500 font-bold text-sm'>
-              {(row.win_type === 'Walkover') ? 'W' : 'N'}
-            </span>
-          </div>
-
-          <div className='text-sm font-light text-center'>
-            {/* <img src="" alt="" /> */}
-            <span className='font-bold'>{row.away_team}</span><br />
-            <span className='font-bold'>{row.away_team_goals}</span>
-          </div>
-        </div>
+        </NavLink>
       </>
     )
   }
+
+  /**
+   * Customising data to be displayed in the cell of the action column (Adding a dropdown)
+  */
+  const actionBodyTemplate = (row) => {
+    return (
+      <>
+        <Dropdown hashing={row.hashing} onDeleteClick={onDeleteClick} />
+      </>
+    )
+  };
+
+  // Deleting result function
+  const onDeleteClick = async (hashing) => {
+    if (window.confirm('Are you sure you want to delete this record?')) {
+      try {
+        const responseref = await fetch(`${apiUrl}/results/delete/${hashing}`, {
+          method: 'DELETE',
+        });
+
+        const delete_response = await responseref.json();
+        console.log('Delete respo', delete_response);
+
+        // if (delete_response.status === '200') {
+        //   toast.success(delete_response.message);
+        //   setTimeout(() => {
+        //     window.location.reload();
+        //   }, 2000);
+        // } else {
+        //   toast.error(delete_response.message);
+        //   return;
+        // }
+
+      } catch (error) {
+        toast.error('Error deleting fixture', error);
+      }
+    }
+  };
 
   return (
     <>
       <div className='grow p-2 h-full md,lg:h-screen bg-gray-100 ml-16 md:ml-0'>
         <div className="items-center my-2">
           {(!isAddResult) ?
-            <h2 className="text-md text-left text-blue-900 font-bold my-auto">CURRENT RESULTS</h2>
+            <h2 className="text-md text-left text-teal-500 font-bold my-auto">CURRENT RESULTS</h2>
             :
-            <h2 className="text-md text-left text-blue-900 font-bold my-auto">ADD MATCH RESULT</h2>
+            <h2 className="text-md text-left text-teal-500 font-bold my-auto">ADD MATCH RESULT</h2>
           }
         </div>
         <div className='grid '>
@@ -229,23 +366,20 @@ const ManageResults = () => {
             pauseOnHover
           />
 
-          {(!isAddResult) &&
+          {(isAddResult) &&
             <div className="flex border-0 w-full">
-
-              <form onSubmit={submitFormData} className='space-y-4 w-full shadow-xl/20 ring-1 ring-gray-200 my-2 bg-white text-black rounded p-4' >
-
+              <form onSubmit={handleSubmit} className='space-y-4 w-full shadow-xl/20 ring-1 ring-gray-200 my-2 bg-white text-black rounded p-4'>
                 <div className="block md:flex space-x-6">
-
                   <div className='w-full'>
-                    <label className='block mb-1 text-sm font-medium text-gray-700'>Season*</label>
-
+                    <label>Season: </label>
                     <select
-                      name="season"
-                      value={season}
-                      onChange={(e) => setSeason(e.target.value)}
-                      className="mt-1 block w-full p-3 border pr-6 rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-500 focus:ring-opacity-50"
+                      name="season_id"
+                      value={formData.season_id}
+                      onChange={handleInputChange}
+                      className=" block w-full p-3 border rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-500 focus:ring-opacity-50"
+                      required
                     >
-                      <option value="">Choose..</option>
+                      <option disabled value="">Choose...</option>
                       {seasonList.map((season) => (
                         <option key={season.id} value={season.id}>
                           Season {season.season}
@@ -254,16 +388,17 @@ const ManageResults = () => {
                     </select>
                   </div>
 
-                  <div className='w-full my-4 md:my-0 lg:my-0'>
-                    <label className='block mb-1 text-sm font-medium text-gray-700'>Matchday*</label>
-
+                  <div className='w-full'>
+                    <label>Matchday: </label>
                     <select
-                      name="matchday"
-                      value={matchday}
-                      onChange={(e) => setMatchday(e.target.value)}
-                      className="mt-1 block w-full p-3 border pr-6 rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-500 focus:ring-opacity-50"
+                      name="matchday_id"
+                      value={formData.matchday_id}
+                      onChange={handleInputChange}
+                      className=" overflow-auto block w-full p-3 border rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-500 focus:ring-opacity-50"
+                      required
+
                     >
-                      <option value="">Choose..</option>
+                      <option disabled value="">Choose...</option>
                       {matchdayList.map((matchday) => (
                         <option key={matchday.id} value={matchday.id}>
                           Matchday {matchday.matchday}
@@ -272,211 +407,232 @@ const ManageResults = () => {
                     </select>
                   </div>
 
-                  <div className='w-full my-4 md:my-0 lg:my-0'>
-                    <label className='block mb-1 text-sm font-medium text-gray-700'>Match Date*</label>
-                    <input 
-                      type='date' 
-                      name='match_date' 
-                      value={match_date}
-                      onChange={(e) => setMatchDate(e.target.value)}
-                      className='w-full p-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 border-gray-300' required
+                  <div className='w-full'>
+                    <label>Date: </label>
+                    <input
+                      type="date"
+                      name="match_date"
+                      value={formData.match_date}
+                      onChange={handleInputChange}
+                      required
+                      className='w-full p-3 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 border-gray-300'
+
                     />
                   </div>
 
-                </div>
-
-                <div className="block md:flex space-x-6 mt-14">
-
                   <div className='w-full'>
-                    <div className='my-2 md:my-0 lg:my-0'>
-                      <label className='block text-sm font-medium text-gray-700'>Home Team<span className='text-red-500 font-bold'>*</span></label>
+                    <label>Win Type: </label>
+                    <select
+                      name="win_type"
+                      value={formData.win_type}
+                      onChange={handleInputChange}
+                      className=" block w-full p-3 border rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-500 focus:ring-opacity-50"
+                      required
+                    >
+                      <option disabled value="">Choose...</option>
 
-                      <select
-                        name="home_team"
-                        value={home_team}
-                        onChange={(e) => setHomeTeam(e.target.value)}
-                        className="mt-1 block w-full p-3 border pr-6 rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-500 focus:ring-opacity-50"
-                      >
-                        <option value="">Choose..</option>
-                        {teamsList.map((team) => (
-                          <option key={team.id} value={team.id}>
-                            {team.name}
-                          </option>
-                        ))}
-                      </select>
-                    </div>
+                      <option value='Normal'>Normal</option>
+                      <option value='Walkover'>WalkOver</option>
 
-                    <div className='my-4 md:my-2 lg:my-2'>
-                      <label className='block text-sm font-medim text-gray-700'>Goals Scored<span className='text-red-500 font-bold'>*</span></label>
+                    </select>
+                  </div>
 
-                      <input
-                        name="home_score"
-                        value={home_score}
-                        onChange={(e) => setHomeScore(e.target.value)}
-                        type='number'
-                        min={0}
-                        className='w-full p-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 border-gray-300' required
-                      />
-                    </div>
 
-                    <div className='mt-10 w-full '>
-                      <hr className='bg-red-500 h-0.5' />
-                      <label className='block text-sm font-medim text-gray-700'>Home Team Scorers<span className='text-red-500 font-bold'>*</span></label>
+                </div>
+                <br />
 
-                      <div className="block md:flex w-full ">
-                        <label class="inline-flex items-center mt-4 "> 
-                          <span class="">Name</span>
-                          <input
-                            name="home_scorer_name[]" list="home_players_datalist"
-                            type='text'
-                            className='w-full mx-2 p-1 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 border-gray-300' required
-                          />
-                        </label>
+                <div className="block md:flex space-x-6">
+                  <div className='w-full'>
+                    <label>Home Team: </label>
+                    <select
+                      name="home_team"
+                      value={formData.home_team}
+                      onChange={(e) => handleTeamChange(e, 'home')}
+                      className="block w-full p-3 border rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-500 focus:ring-opacity-50"
+                      required
+                    >
+                      <option disabled value="">Choose...</option>
+                      {teamsList.map((team) => (
+                        <option key={team.id} value={team.id}>
+                          {team.name}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
 
-                        <label class="inline-flex items-center mt-4">
-                          <span class="">Goals</span>
-                          <input
-                            type='number'
-                            name="home_scorer_goals[]" min="1"
-                            className='w-full mx-2 p-1 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 border-gray-300' required
-                          />
-                        </label>
-
-                      </div>
-
-                      <button 
-                        type="button"
-                        onclick="addScorer('home')" 
-                        className='bg-teal-600 text-white p-1 text-sm font-light rounded my-1'>
-                          Add Home Scorer
-                      </button>
-
-                    </div>
-
-                    <div className='my-4 md:my-2 lg:my-2'>
-                      <span className='font-bold text-teal-700'>
-                        <label class="inline-flex items-center">
-                          <span class="text-sm">Home had lady</span>
-                          <input 
-                            name="home_had_lady"
-                            value={home_had_lady}
-                            onChange={(e) => setHomeHadLady(e.target.value)}
-                            type="checkbox" 
-                            class="w-5 h-5 mx-2 text-teal-600" />
-                        </label>
-                      </span>
-                    </div>
-
+                  <div className='w-fit flex justify-center items-center'>
+                    <span className='font-bold text-center text-xl text-red-500'> vs </span>
                   </div>
 
                   <div className='w-full'>
-                    <div className='my-2 md:my-0 lg:my-0'>
-                      <label className='block text-sm font-medium text-gray-700'>Away Team<span className='text-red-500 font-bold'>*</span></label>
+                    <label>Away Team: </label>
+                    <select
+                      name="away_team"
+                      value={formData.away_team}
+                      onChange={(e) => handleTeamChange(e, 'away')}
+                      className="block w-full p-3 border rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-500 focus:ring-opacity-50"
+                      required
+                    >
+                      <option disabled value="">Choose...</option>
+                      {teamsList.map((team) => (
+                        <option key={team.id} value={team.id}>
+                          {team.name}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                </div>
+                <br />
 
-                      <select
-                        name="away_team"
-                        value={away_team}
-                        onChange={(e) => setAwayTeam(e.target.value)}
-                        className="mt-1 block w-full p-3 border pr-6 rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-500 focus:ring-opacity-50"
-                      >
-                        <option value="">Choose..</option>
-                        {teamsList.map((team) => (
-                          <option key={team.id} value={team.id}>
-                            {team.name}
-                          </option>
-                        ))}
-                      </select>
-                    </div>
+                <div className="block md:flex space-x-6">
+                  <div className='w-full'>
+                    <label>Home Score: </label>
+                    <input
+                      type="number"
+                      name="home_score"
+                      value={formData.home_score}
+                      onChange={handleInputChange}
+                      min="0"
+                      className="block w-full p-3 border rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-500 focus:ring-opacity-50"
+                      required
+                    />
+                  </div>
 
-                    <div className='my-4 md:my-2 lg:my-2'>
-                      <label className='block text-sm font-medim text-gray-700'>Goals Scored<span className='text-red-500 font-bold'>*</span></label>
+                  <div className="w-full">
+                    <label>Away Score: </label>
+                    <input
+                      type="number"
+                      name="away_score"
+                      value={formData.away_score}
+                      onChange={handleInputChange}
+                      min="0"
+                      className="block w-full p-3 border rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-500 focus:ring-opacity-50"
+                      required
+                    />
+                  </div>
+                </div>
 
-                      <input
-                        name="away_score"
-                        value={away_score}
-                        onChange={(e) => setAwayScore(e.target.value)}
-                        type='number'
-                        min={0}
-                        className='w-full p-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 border-gray-300' required
-                      />
-                    </div>
+                <div className="block md:flex space-x-6">
+                  <div className='w-full md:my-2 lg:my-2'>
+                    <span className='font-bold text-teal-700'>
+                      <label className="inline-flex items-center">
+                        <span className="text-sm">Home Had Lady</span>
+                        <input
+                          type="checkbox"
+                          name="home_had_lady"
+                          checked={formData.home_had_lady}
+                          onChange={handleInputChange}
+                          className="w-5 h-5 mx-2 text-teal-600"
+                        />
 
+                      </label>
+                    </span>
+                  </div>
 
-                    <div className='mt-10 w-full '>
-                      <hr className='bg-blue-500 h-0.5' />
-                      <label className='block text-sm font-medim text-gray-700'>Away Team Scorers<span className='text-red-500 font-bold'>*</span></label>
+                  <div className='w-full md:my-2 lg:my-2'>
+                    <span className='font-bold text-teal-700'>
+                      <label className="inline-flex items-center">
+                        <span className="text-sm">Away Had Lady</span>
+                        <input
+                          type="checkbox"
+                          name="away_had_lady"
+                          checked={formData.away_had_lady}
+                          onChange={handleInputChange}
+                          className="w-5 h-5 mx-2 text-teal-600"
+                        />
 
-                      <div className="block md:flex w-full">
-                        <label class="inline-flex items-center mt-4 "> 
-                          <span class="">Name</span>
-                          <input
-                            // name="home_scorer"
-                            // value={home_team_goals}
-                            // onChange={(e) => setHomeTeamGoals(e.target.value)}
-                            name="away_scorer_name[]" list="away_players_datalist"
-                            type='text'
-                            className='w-full mx-2 p-1 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 border-gray-300' required
-                          />
-                        </label>
+                      </label>
+                    </span>
+                  </div>
+                </div>
 
-                        <label class="inline-flex items-center mt-4">
-                          <span class="">Goals</span>
-                          <input
-                            // name="home_team_goals"
-                            // value={home_team_goals}
-                            // onChange={(e) => setHomeTeamGoals(e.target.value)}
-                            // type='number'
-                            name="away_scorer_goals[]" min="1"
-                            className='w-full mx-2 p-1 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 border-gray-300' required
-                          />
-                        </label>
+                <div className="space-x-6 w-full">
+                  <label>Home Scorers:</label><br />
 
+                  <div id="home_scorers" className="">
+                    {formData.home_scorers.map((scorer, index) => (
+                      <div key={`home_scorer_${index}`} className="scorer-row my-2">
+                        <label>Name: </label>
+                        <input
+                          type="text"
+                          value={scorer.name}
+                          onChange={(e) => handleScorerChange(e, index, 'home', 'name')}
+                          list="home_players_datalist"
+                          className='w-fit mx-2 p-1 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 border-gray-300' required
+
+                        />
+                        <label>Goals: </label>
+                        <input
+                          type="number"
+                          value={scorer.goals}
+                          onChange={(e) => handleScorerChange(e, index, 'home', 'goals')}
+                          min="1"
+                          className='w-fit mx-2 p-1 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 border-gray-300' required
+                        />
                       </div>
+                    ))}
 
-                      <button
-                        onclick="addScorer('away')"
-                        className='bg-teal-600 text-white p-1 text-sm font-light rounded my-1'>
-                          Add Away Scorer
-                      </button>
-
-                    </div>
-
-                    <div className='my-4 md:my-2 lg:my-2'>
-                      <span className='font-bold text-teal-700'>
-                        <label class="inline-flex items-center">
-                          <span class="text-sm">Away Lady Played</span>
-                          <input 
-                            name="away_had_lady"
-                            value={away_had_lady}
-                            onChange={(e) => setAwayHadLady(e.target.value)}
-                            type="checkbox" 
-                            class="w-5 h-5 mx-2 text-teal-600" 
-                            
-                          />
-
-                        </label>
-                      </span>
-                    </div>
-                    
+                    <button type='button'
+                      onClick={() => addScorer('home')}
+                      className='bg-teal-600 text-white p-1 text-sm font-light rounded my-1'>
+                      Add Home Scorer
+                    </button>
                   </div>
 
+
+                  <datalist id="home_players_datalist">
+                    {homePlayers.map((player, index) => (
+                      <option key={`home_player_${index}`} value={player} />
+                    ))}
+                  </datalist>
                 </div>
 
-                <div className='mt-10'>
-                  <div className='space-x-5 my-2 flex justify-start'>
-                    <button type='submit' className='cursor-pointer px-4 py-2 bg-teal-700 hover:bg-teal-700 text-white rounded font-light'>ADD RESULT</button>
+                <div className='space-x-6 w-full'>
+                  <label>Away Scorers:</label>
+                  <div id="away_scorers">
+                    {formData.away_scorers.map((scorer, index) => (
+                      <div key={`away_scorer_${index}`} className="scorer-row my-2">
+                        <label>Name: </label>
+                        <input
+                          type="text"
+                          value={scorer.name}
+                          onChange={(e) => handleScorerChange(e, index, 'away', 'name')}
+                          list="away_players_datalist"
+                          className='w-fit mx-2 p-1 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 border-gray-300' required
+                        />
+                        <label>Goals: </label>
+                        <input
+                          type="number"
+                          value={scorer.goals}
+                          onChange={(e) => handleScorerChange(e, index, 'away', 'goals')}
+                          min="1"
+                          className='w-fit mx-2 p-1 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 border-gray-300' required
+                        />
+                      </div>
+                    ))}
+                    <button type="button"
+                      className='bg-teal-600 text-white p-1 text-sm font-light rounded my-1'
+                      onClick={() => addScorer('away')}>
+                      Add Away Scorer
+                    </button>
                   </div>
+                  <datalist id="away_players_datalist">
+                    {awayPlayers.map((player, index) => (
+                      <option key={`away_player_${index}`} value={player} />
+                    ))}
+                  </datalist>
                 </div>
+                <br />
 
+                <input
+                  type="submit"
+                  value="Save Result"
+                  className='cursor-pointer px-4 py-2 bg-blue-900 hover:bg-blue-800 text-white rounded font-light' />
               </form>
-
-              <datalist id="home_players_datalist"></datalist>
-              <datalist id="away_players_datalist"></datalist>
-              
-            </div>
+            </div >
           }
 
-          {(isAddResult) &&
+          {(!isAddResult) &&
             <div className="w-full flex flex-col overflow-auto bg-white px-4">
               <div className="mt-2">
                 <InputText
@@ -489,9 +645,9 @@ const ManageResults = () => {
                   }
                 />
               </div>
-              {/* <div className='overflow-auto'> */}
+              
               <DataTable value={data}
-                ref={data}
+                // ref={data}
                 tableStyle={{ minWidth: '10rem' }}
                 filters={filters}
                 globalFilterFields={['combinedColumns']}
@@ -499,10 +655,7 @@ const ManageResults = () => {
                 currentPageReportTemplate='showing {first} to {last} of {totalRecords} results'
                 paginatorTemplate='FirstPageLink PrevPageLink PageLinks NextPageLink LastPageLink CurrentPageReport RowsPerPageDropdown'
                 removableSort
-                // showGridlines
-                // stripedRows
                 dataKey='id'
-                // header={header}
                 emptyMessage='No results available'
                 paginator
                 rows={10}
@@ -511,7 +664,6 @@ const ManageResults = () => {
               >
                 <Column body={teamBodyTemplate} ></Column>
               </DataTable>
-              {/* </div> */}
             </div>
           }
 

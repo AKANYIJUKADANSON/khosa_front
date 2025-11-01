@@ -72,7 +72,7 @@ const Navbar = ({ appRef }) => {
     <div className="fixed z-10 top-0 w-full bg-white text-teal-500 md:ml-0 py-1 border-b border-gray-300 h-20 flex items-center">
       <div className="flex items-center justify-start w-full ml-6">
         <div className="flex  items-center">
-          <LogoComponent logoclass={"h-10 rounded-full text-teal-500 "} />
+          <LogoComponent logoclass={"h-15 rounded-full text-teal-500 "} />
         </div>
       </div>
 

@@ -27,7 +27,7 @@ const MainLayout = () => {
         
         <Navbar appRef = { appRef } />
         <div style={{ fontFamily: 'sans-serif' }} className='grow ml:16 mt-20 h-full bg-gray-100 text-gray-900  '>
-          <div style={{ fontFamily: 'sans-serif' }} className=' grow ml:16 md:ml-64 h-full bg-gray-100 text-gray-900 dark:bg-gray-900 dark:text-gray-100 '>
+          <div style={{ fontFamily: 'sans-serif' }} className=' grow ml:16 md:ml-64 h-full bg-gray-00 text-gray-900 dark:bg-gray-900 dark:text-gray-100 '>
             {/* margin-left is 16 because the sidebar width is 16 and on md it will be 64 because the sidebar width is also 64
             h-full = 100% and for large screens it shoud take the screen size*/}
 
