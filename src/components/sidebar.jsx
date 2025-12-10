@@ -127,6 +127,13 @@ const Sidebar = () => {
                     <GiLinkedRings className='text-2xl text-teal-500 md:mr-4' />
                     <span className={`${(toggle) ? 'md:inline' : 'hidden'} md:inline text-sm font-bold text-teal-500`}>About</span>
                 </NavLink>
+
+                <NavLink
+                    onClick={() => setToggle(false)}
+                    to='/matchdays' className='flex items-center py-2 my-1 md:my-2 md:pl-2 md:mr-4 space-x-1 hover:rounded hover:cursor-pointer hover:bg-gray-200 hover:text-white'>
+                    <GiLinkedRings className='text-2xl text-teal-500 md:mr-4' />
+                    <span className={`${(toggle) ? 'md:inline' : 'hidden'} md:inline text-sm font-bold text-teal-500`}>Matchdays</span>
+                </NavLink>
                 
             </ul>
         </div>
