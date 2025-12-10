@@ -51,6 +51,7 @@ const router = createBrowserRouter(
         <Route path='/players' element={ <ManagePlayers />} />
         <Route path='/teams' element={ <ManageTeams />} />
         <Route path='/gallery' element={ <ManageGallery />} />
+        {/* <Route path='/matchdays' element={ <ManageMatchdays />} /> */}
         <Route path='/about' element={ <ManageAbout />} loader = {aboutLoader} />
 
         <Route path='/fixtures/:hashing' element= { <FixturePage />} loader={fixtureLoader} />

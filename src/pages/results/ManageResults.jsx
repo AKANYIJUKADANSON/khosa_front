@@ -540,7 +540,6 @@ const ManageResults = () => {
                           onChange={handleInputChange}
                           className="w-5 h-5 mx-2 text-teal-600"
                         />
-
                       </label>
                     </span>
                   </div>
@@ -558,7 +557,7 @@ const ManageResults = () => {
                           value={scorer.name}
                           onChange={(e) => handleScorerChange(e, index, 'home', 'name')}
                           list="home_players_datalist"
-                          className='w-fit mx-2 p-1 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 border-gray-300' required
+                          className='w-fit mx-2 p-1 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 border-gray-300'
 
                         />
                         <label>Goals: </label>
@@ -567,7 +566,7 @@ const ManageResults = () => {
                           value={scorer.goals}
                           onChange={(e) => handleScorerChange(e, index, 'home', 'goals')}
                           min="1"
-                          className='w-fit mx-2 p-1 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 border-gray-300' required
+                          className='w-fit mx-2 p-1 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 border-gray-300'
                         />
                       </div>
                     ))}
@@ -598,7 +597,7 @@ const ManageResults = () => {
                           value={scorer.name}
                           onChange={(e) => handleScorerChange(e, index, 'away', 'name')}
                           list="away_players_datalist"
-                          className='w-fit mx-2 p-1 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 border-gray-300' required
+                          className='w-fit mx-2 p-1 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 border-gray-300'
                         />
                         <label>Goals: </label>
                         <input
@@ -606,7 +605,7 @@ const ManageResults = () => {
                           value={scorer.goals}
                           onChange={(e) => handleScorerChange(e, index, 'away', 'goals')}
                           min="1"
-                          className='w-fit mx-2 p-1 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 border-gray-300' required
+                          className='w-fit mx-2 p-1 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 border-gray-300'
                         />
                       </div>
                     ))}
