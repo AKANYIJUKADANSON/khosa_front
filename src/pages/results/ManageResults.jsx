@@ -18,10 +18,10 @@ const ManageResults = () => {
 
   const apiUrl = import.meta.env.VITE_API_URL;
   const [isAddResult, setIsAddResult] = useState(false);
+  // const userdata = JSON.parse(localStorage.getItem('userdata'));
 
   // State for form inputs
   const [formData, setFormData] = useState({
-    season_id: '',
     matchday_id: '',
     match_date: '',
     home_team: '',
@@ -44,46 +44,72 @@ const ManageResults = () => {
   const [players, setPlayersList] = useState([]);
   const [seasonList, setSeasonList] = useState([]);
   const [matchdayList, setMatchdayList] = useState([]);
+  const [season_id, setSeasonId] = useState('');
+  // const [matchday_id, setMatchdayId] = useState('');
 
+  const get_season_matchdays = async (event) =>{
+    const userdata = JSON.parse(localStorage.getItem('userdata'));
+    const formData = new FormData();
+    formData.append('loggedin_user_id', userdata.user_id);
+
+    const selected_season_id = event.target.value;
+
+    // Set season id
+    setSeasonId(selected_season_id);
+
+    // console.log('Selected_season_id:', selected_season_id);
+
+    const matchday_list = await fetch(`${apiUrl}/season_matchdays/${selected_season_id}`, {
+      method : 'POST',
+      body : formData
+    });
+    const data = await matchday_list.json();
+    // console.log("season_matchday_list: ", data.season_matchdays);
+    setMatchdayList(data.season_matchdays);
+
+  }
 
   useEffect(() => {
+    const m_user = JSON.parse(localStorage.getItem('userdata'));
+    const formData = new FormData();
+    formData.append('loggedin_user_id', m_user.user_id);
+
     const get_results = async () => {
-      const results = await fetch(`${apiUrl}/results`);
+      const results = await fetch(`${apiUrl}/results`, {
+        method : 'POST',
+        body : formData
+      });
       const data = await results.json();
-      console.log("Match results: ", data.results);
+      // console.log("Match results: ", data.results);
       setResults(data.results);
     }
 
     const get_teams = async () => {
-      const teams_list = await fetch(`${apiUrl}/teams`);
-      const data = await teams_list.json();
-      console.log("Teams_list: ", data.teams);
-      setTeamList(data.teams);
+        const teamsList = await fetch(`${apiUrl}/teams`, {
+            method: 'POST',
+            body: formData
+        });
+        const data = await teamsList.json();
+        setTeamList(data.teams);
     }
 
     const get_players_list = async () => {
-      const players_list = await fetch(`${apiUrl}/players`);
+      const players_list = await fetch(`${apiUrl}/players_de`);
       const data = await players_list.json();
-      console.log("Players_list: ", data.players);
+      // console.log("Players_list: ", data.players);
       setPlayersList(data.players);
     }
 
     const get_season_list = async () => {
-      const seasons_list = await fetch(`${apiUrl}/seasons`);
-      const data = await seasons_list.json();
-      console.log("Seasons_list: ", data.seasons);
+      const seasons = await fetch(`${apiUrl}/seasons`, {
+          method: 'POST',
+          body: formData
+      });
+      const data = await seasons.json();
+      // console.log("seasons: ", data.seasons);
       setSeasonList(data.seasons);
     }
 
-
-    const get_matchday_list = async () => {
-      const matchday_list = await fetch(`${apiUrl}/matchdays`);
-      const data = await matchday_list.json();
-      console.log("Matchday_list: ", data.matchdays);
-      setMatchdayList(data.matchdays);
-    }
-
-    get_matchday_list();
     get_players_list();
     get_season_list();
     get_results();
@@ -109,10 +135,10 @@ const ManageResults = () => {
     // console.log('home_players:', players);
     if (teamType === 'home') {
       setHomePlayers(players);
-      console.log('home_players:', players);
+      // console.log('home_players:', players);
     } else {
       setAwayPlayers(players);
-      console.log('away_players:', players);
+      // console.log('away_players:', players);
     }
   };
 
@@ -165,7 +191,7 @@ const ManageResults = () => {
 
     const formDataToSend = new FormData();
     // Append individual form fields
-    formDataToSend.append('season_id', formData.season_id);
+    formDataToSend.append('season_id', season_id);
     formDataToSend.append('matchday_id', formData.matchday_id);
     formDataToSend.append('win_type', formData.win_type);
     formDataToSend.append('match_date', formData.match_date);
@@ -198,25 +224,30 @@ const ManageResults = () => {
         body: formDataToSend
       });
 
-      const response_data = await send_match_data.json();
+      const data = await send_match_data.json();
 
-      console.log("CI_3 Response: ", response_data);
+      // console.log("CI_3 Response: ", response_data);
 
-      if (response_data.status === '200') {
-        toast.success(response_data.message);
+      if(data.status == '401'){
+          setTimeout(() => {
+          toast.error(data.message);
+          }, 1000);
+          localStorage.clear();
+          window.location.href = '/';
+      }
+      else if(data.status == '400'){
+          toast.error(data.message);
+          return;
+      }else{
+        toast.success(data.message);
         setTimeout(() => {
           window.location.reload();
-        }, 4000);
-
-      } else {
-        toast.error(response_data.message);
-        return;
+        }, 2000);
       }
 
-
     } catch (error) {
-      console.error('Submission error:', error);
-      alert('An error occurred while saving.');
+      // console.error('Submission error:', error);
+      alert('An error occurred while saving.', error);
     }
   };
 
@@ -234,6 +265,14 @@ const ManageResults = () => {
                 ${result.away_team}
                 ${result.home_team_goals}
                 ${result.away_team_goals}
+                ${result.home_team_lady_played}
+                ${result.away_team_lady_played}
+                ${result.match_date}
+                ${result.win_type}
+                ${result.season}
+                ${result.matchday}
+                ${result.matchday_label}
+                
             `,
   }));
 
@@ -308,40 +347,40 @@ const ManageResults = () => {
   /**
    * Customising data to be displayed in the cell of the action column (Adding a dropdown)
   */
-  const actionBodyTemplate = (row) => {
-    return (
-      <>
-        <Dropdown hashing={row.hashing} onDeleteClick={onDeleteClick} />
-      </>
-    )
-  };
+  // const actionBodyTemplate = (row) => {
+  //   return (
+  //     <>
+  //       <Dropdown hashing={row.hashing} onDeleteClick={onDeleteClick} />
+  //     </>
+  //   )
+  // };
 
   // Deleting result function
-  const onDeleteClick = async (hashing) => {
-    if (window.confirm('Are you sure you want to delete this record?')) {
-      try {
-        const responseref = await fetch(`${apiUrl}/results/delete/${hashing}`, {
-          method: 'DELETE',
-        });
+  // const onDeleteClick = async (hashing) => {
+  //   if (window.confirm('Are you sure you want to delete this record?')) {
+  //     try {
+  //       const responseref = await fetch(`${apiUrl}/results/delete/${hashing}`, {
+  //         method: 'DELETE',
+  //       });
 
-        const delete_response = await responseref.json();
-        console.log('Delete respo', delete_response);
+  //       const delete_response = await responseref.json();
+  //       console.log('Delete respo', delete_response);
 
-        // if (delete_response.status === '200') {
-        //   toast.success(delete_response.message);
-        //   setTimeout(() => {
-        //     window.location.reload();
-        //   }, 2000);
-        // } else {
-        //   toast.error(delete_response.message);
-        //   return;
-        // }
+  //       // if (delete_response.status === '200') {
+  //       //   toast.success(delete_response.message);
+  //       //   setTimeout(() => {
+  //       //     window.location.reload();
+  //       //   }, 2000);
+  //       // } else {
+  //       //   toast.error(delete_response.message);
+  //       //   return;
+  //       // }
 
-      } catch (error) {
-        toast.error('Error deleting fixture', error);
-      }
-    }
-  };
+  //     } catch (error) {
+  //       toast.error('Error deleting fixture', error);
+  //     }
+  //   }
+  // };
 
   return (
     <>
@@ -374,8 +413,9 @@ const ManageResults = () => {
                     <label>Season: </label>
                     <select
                       name="season_id"
-                      value={formData.season_id}
-                      onChange={handleInputChange}
+                      value={season_id}
+                      // onChange={handleInputChange}
+                      onChange={get_season_matchdays}
                       className=" block w-full p-3 border rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-500 focus:ring-opacity-50"
                       required
                     >
@@ -396,7 +436,6 @@ const ManageResults = () => {
                       onChange={handleInputChange}
                       className=" overflow-auto block w-full p-3 border rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-500 focus:ring-opacity-50"
                       required
-
                     >
                       <option disabled value="">Choose...</option>
                       {matchdayList.map((matchday) => (

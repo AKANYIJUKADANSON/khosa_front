@@ -11,11 +11,13 @@ const FixturePage = ({ initIsUpdateFixture }) => {
 
     // If used vite to create the react app
     const apiUrl = import.meta.env.VITE_API_URL;
+    const userdata = JSON.parse(localStorage.getItem('userdata'));
+
     const navigate = useNavigate();
 
     // Get the fixture data from the loader
     const selected_fixture = useLoaderData();
-    console.log('Selected_Fixture', selected_fixture);
+    // console.log('Selected_Fixture', selected_fixture);
 
     const [isUpdateFixture, setIsUpdateFixture] = useState(initIsUpdateFixture ? initIsUpdateFixture : false);
 
@@ -23,9 +25,10 @@ const FixturePage = ({ initIsUpdateFixture }) => {
     const [seasonList, setSeasonList] = useState([]);
     const [matchdayList, setMatchdayList] = useState([]);
 
-    const [season, setSeason] = useState('');
+    const [season_id, setSeasonId] = useState('');
     const [matchday_id, setMatchday] = useState('');
     const [match_date, setMatchDate] = useState('');
+    // const [match_time, setMatchTime] = useState('');
     const [home_team, setHomeTeam] = useState('');
     const [away_team, setAwayTeam] = useState('');
 
@@ -37,11 +40,50 @@ const FixturePage = ({ initIsUpdateFixture }) => {
      * Setting up the initial values for the input fields
     */
     const split_time = SplitTime(selected_fixture.time);
-    console.log("Splited Time:", split_time);
+    // console.log("Splited Time:", split_time);
+
+
+    const get_season_matchdays = async (event) =>{
+
+        // const userdata1 = JSON.parse(localStorage.getItem('userdata'));
+        const formData = new FormData();
+        formData.append('loggedin_user_id', userdata.user_id);
+
+        const selected_season_id = event.target.value;
+
+        // Set season id
+        setSeasonId(selected_season_id);
+
+        const matchday_list = await fetch(`${apiUrl}/season_matchdays/${selected_season_id}`, {
+        method: 'POST',
+        body: formData
+        });
+
+        const data = await matchday_list.json();
+        console.log("season_matchday_list: ", data.season_matchdays);
+        setMatchdayList(data.season_matchdays);
+    }
 
     useEffect(() => {
         if (selected_fixture) {
-            setSeason(selected_fixture.season_id);
+            const get_default_season_matchdays = async () =>{
+                const loggedin_user = JSON.parse(localStorage.getItem('userdata'));
+                const formData = new FormData();
+                formData.append('loggedin_user_id', loggedin_user.user_id);
+
+                const selected_season_id = selected_fixture.season_id;
+                setSeasonId(selected_season_id);
+
+                const matchday_list = await fetch(`${apiUrl}/season_matchdays/${selected_season_id}`, {
+                method: 'POST',
+                body: formData
+                });
+                const data = await matchday_list.json();
+                setMatchdayList(data.season_matchdays);
+            }
+            get_default_season_matchdays();
+
+            setSeasonId(selected_fixture.season_id);
             setMatchday(selected_fixture.matchday_id);
             setHomeTeam(selected_fixture.home_team_id);
             setAwayTeam(selected_fixture.away_team_id);
@@ -52,34 +94,64 @@ const FixturePage = ({ initIsUpdateFixture }) => {
             setMeridian(String(split_time.period));
         }
 
-    }, [selected_fixture, split_time]);
+    }, [apiUrl, selected_fixture, split_time]);
 
     useEffect(() => {
+
         const get_teams = async () => {
-            const teams_list = await fetch(`${apiUrl}/teams`);
+            const formData = new FormData();
+            formData.append('loggedin_user_id', userdata.user_id);
+
+            const teams_list = await fetch(`${apiUrl}/teams`, {
+            method: 'POST',
+            body: formData
+            });
             const data = await teams_list.json();
+            if(data.status == '401'){
+            setTimeout(() => {
+                toast.error(data.message);
+            }, 1000);
+            localStorage.clear();
+            window.location.href = '/';
+            }else if(data.status == '400'){
+            toast.error(data.message);
+            return;
+            }else{
             // console.log("Teams_list: ", data.teams);
             setTeamList(data.teams);
+            }
+            
         }
-
+    
         const get_season_list = async () => {
-            const seasons_list = await fetch(`${apiUrl}/seasons`);
+            const formData = new FormData();
+            formData.append('loggedin_user_id', userdata.user_id);
+
+            const seasons_list = await fetch(`${apiUrl}/seasons`, {
+                method: 'POST',
+                body: formData
+            });
+    
             const data = await seasons_list.json();
+            if(data.status == '401'){
+            setTimeout(() => {
+                toast.error(data.message);
+            }, 1000);
+            localStorage.clear();
+            window.location.href = '/';
+            }else if(data.status == '400'){
+            toast.error(data.message);
+            return;
+            }else{
             // console.log("seasons List: ", data.seasons);
             setSeasonList(data.seasons);
+            }
+            
         }
 
-        const get_matchday_list = async () => {
-            const matchday_list = await fetch(`${apiUrl}/matchdays`);
-            const data = await matchday_list.json();
-            // console.log("Matchday_list: ", data.matchdays);
-            setMatchdayList(data.matchdays);
-        }
-
-        get_matchday_list();
         get_season_list();
         get_teams();
-    }, [apiUrl]);
+    }, [selected_fixture, userdata, apiUrl]);
 
     // capture and set data
     const submitFormData = async (e) => {
@@ -87,22 +159,11 @@ const FixturePage = ({ initIsUpdateFixture }) => {
 
         const match_time = hours + ':' + minutes + meridian;
 
-        // const match_result_data = {
-        //   updated_season: season,
-        //   updated_matchday_id: matchday_id,
-        //   updated_match_date: match_date,
-        //   updated_match_time: match_time,
-        //   updated_home_team_id: home_team,
-        //   updated_away_team_id: away_team,
-        // }
-
-        // console.log('Fixture Result Data:', match_result_data);
-
-        // initialise FormData and append the object with its key
         const formData = new FormData();
+        formData.append('loggedin_user_id', userdata.user_id);
 
         // Append all data to the formdata array
-        formData.append('season_id', season);
+        formData.append('season_id', season_id);
         formData.append('matchday_id', matchday_id);
         formData.append('match_date', match_date);
         formData.append('match_time', match_time);
@@ -116,17 +177,23 @@ const FixturePage = ({ initIsUpdateFixture }) => {
             body: formData
         });
 
-        const response_data = await update_fixture.json();
-        // console.log("CI_3 Response: ", response_data);  
+        const data = await update_fixture.json();
+        // console.log("CI_3 Response: ", response_data); 
 
-        if (response_data.status === '200') {
-            toast.success(response_data.message);
+        if(data.status == '401'){
+            setTimeout(() => {
+            toast.error(data.message);
+        }, 1000);
+        localStorage.clear();
+        window.location.href = '/';
+        }else if(data.status == '400'){
+            toast.error(data.message);
+            return;
+        }else{
+            toast.success(data.message);
             setTimeout(() => {
                 navigate('/fixtures');
-            }, 3000);
-        } else {
-            toast.error(response_data.message);
-            return;
+            }, 2000);
         }
 
     }
@@ -166,9 +233,9 @@ const FixturePage = ({ initIsUpdateFixture }) => {
                                         <label className='block mb-1 text-sm font-medium text-gray-700'>Season*</label>
 
                                         <select
-                                            name="season"
-                                            value={season}
-                                            onChange={(e) => setSeason(e.target.value)}
+                                            name="season_id"
+                                            value={season_id}
+                                            onChange={get_season_matchdays}
                                             className="mt-1 block w-full p-3 border text-teal-700 pr-6 rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-500 focus:ring-opacity-50"
                                             required
                                         >
@@ -383,16 +450,34 @@ const FixturePage = ({ initIsUpdateFixture }) => {
 const fixtureLoader = async ({ params }) => {
     // If used vite to create the react app
     const apiUrl = import.meta.env.VITE_API_URL;
+    const  userdata = JSON.parse(localStorage.getItem('userdata'));
+
+    const formData = new FormData();
+    formData.append('loggedin_user_id', userdata.user_id);
 
     // Get the hashed_id parameter sent in the link in the App.js file with the dataloader
     // The id parameter used in the App.js file should be the same as that used here
-    const response = await fetch(`${apiUrl}/fixtures/${params.hashing}`);
+    const response = await fetch(`${apiUrl}/fixtures/${params.hashing}`, {
+      method: 'POST',
+      body: formData
+    });
+
     const data = await response.json();
-    if (!response.ok) {
-        throw new Error('Failed to fetch fixture data');
+    if(data.status == '401'){
+        setTimeout(() => {
+        toast.error(data.message);
+        }, 1000);
+        localStorage.clear();
+        window.location.href = '/';
     }
-    // console.log(params.hashing);
-    return data.fixture;
+    else if(data.status == '400'){
+        toast.error(data.message);
+        return;
+    }else{
+        return data.fixture;
+    }
+
+
 };
 
 export { FixturePage as default, fixtureLoader }

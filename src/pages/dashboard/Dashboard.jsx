@@ -76,37 +76,56 @@ const Dashboard = () => {
 
     useEffect(() => {
 
-        const fetchData = async () => {
-            try {
-                const [teamsRes, resultsRes, fixturesRes, seasonsRes] = await Promise.all([
-                    fetch(`${apiUrl}/teams`),
-                    fetch(`${apiUrl}/results`),
-                    fetch(`${apiUrl}/fixtures`),
-                    fetch(`${apiUrl}/seasons`),
-                ]);
+        const userdata = JSON.parse(localStorage.getItem('userdata'));
+        const formData = new FormData();
+        formData.append('loggedin_user_id', userdata.user_id);
 
-                const teams_response = await teamsRes.json();
-                const results_response = await resultsRes.json();
-                const fixtures_response = await fixturesRes.json();
-                const seasons_response = await seasonsRes.json();
-
-                setTeams(teams_response.teams);
-                console.log('Teams:', teams_response.teams);
-                setResults(results_response.results);
-                setFixtures(fixtures_response.fixtures);
-                setSeasons(seasons_response.seasons);
-
-            } catch (error) {
-                console.log("Error fetching data:", error);
-            }
-
+        const get_fixtures = async () => {
+            const fixtures = await fetch(`${apiUrl}/fixtures`, {
+                method: 'POST',
+                body: formData
+            });
+            const data = await fixtures.json();
+            // console.log("Match fixtures: ", data.fixtures);
+            setFixtures(data.fixtures);
         }
 
-        fetchData();
+        const get_teams = async () => {
+            const teamsList = await fetch(`${apiUrl}/teams`, {
+                method: 'POST',
+                body: formData
+            });
+            const data = await teamsList.json();
+            console.log("All Teams: ", data);
+            setTeams(data.teams);
+        }
+
+        const get_season_list = async () => {
+            const seasons = await fetch(`${apiUrl}/seasons`, {
+                method: 'POST',
+                body: formData
+            });
+            const data = await seasons.json();
+            console.log("seasons: ", data.seasons);
+            setSeasons(data.seasons);
+        }
+
+        const get_results = async () => {
+            const results = await fetch(`${apiUrl}/results`, {
+                method : 'POST',
+                body : formData
+            });
+            const data = await results.json();
+            // console.log("Match results: ", data.results);
+            setResults(data.results);
+        }
+
+        get_teams();
+        get_results();
+        get_fixtures();
+        get_season_list();
 
     }, [apiUrl]);
-
-
 
     return (
 

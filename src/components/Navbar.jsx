@@ -6,10 +6,7 @@ import { NavLink } from 'react-router-dom';
 import LogoComponent from './LogoComponent';
 import { MdAccountCircle } from 'react-icons/md';
 
-const Navbar = ({ appRef }) => {
-  // If used vite to create the react app
-  const apiUrl = import.meta.env.VITE_API_URL;
-
+const Navbar = ({ appRef, userdata }) => {
   const [isOpen, setIsOpen] = useState(false);
   const [isFullScreen, setIsFullScreen] = useState(false);
   const dropdownRef = useRef(null);
@@ -93,7 +90,7 @@ const Navbar = ({ appRef }) => {
           onClick={toggleDropdown}
           className="flex items-center cursor-pointer  dropdown-toggle">
           <span className="mr-2 font-semibold text-sm hidden md:block">
-            ADMIN
+            {userdata.first_name}
           </span>
           <span className="mr-3 overflow-hidden rounded-full h-11 w-11">
             <MdAccountCircle className='rounded-full h-10 w-10' />
@@ -101,7 +98,7 @@ const Navbar = ({ appRef }) => {
         </button>
 
         {isOpen && (
-          <UserDropDown isOpen={isOpen} dropdownRef={dropdownRef} closeDropdown={closeDropdown} />
+          <UserDropDown isOpen={isOpen} dropdownRef={dropdownRef} closeDropdown={closeDropdown} userdata={userdata} />
         )}
 
       </div>
