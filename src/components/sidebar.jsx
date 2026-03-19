@@ -9,7 +9,7 @@ import { BiCalendar, BiImage, BiSolidReport } from 'react-icons/bi';
 import { HiArrowCircleLeft, HiArrowCircleRight, HiArrowSmRight } from 'react-icons/hi';
 import { GiLinkedRings } from 'react-icons/gi';
 import { GrGallery } from 'react-icons/gr';
-import { BsNewspaper, BsPeopleFill } from 'react-icons/bs';
+import { BsNewspaper, BsPeopleFill, BsShield, BsShieldFill } from 'react-icons/bs';
 import { MdAccountCircle } from 'react-icons/md';
 
 const Sidebar = () => {
@@ -41,13 +41,6 @@ const Sidebar = () => {
         };
     }, []);
 
-
-    // const [comment, setComment] = useState('');
-    // useEffect(() => {
-    //     const user = JSON.parse(localStorage.getItem('authenticated_user')).authenticated_userdata;
-    //     setAuthenticatedUser(user);
-    // }, []);
-
     return (
 
         <div ref={sidebarRefRef} style={{ fontFamily: 'sans-serif' }} className={`bg-white z-9 mt-20 mb-0 h-full pl-4 pr-0 p-2 fixed ${(toggle) ? 'w-35' : 'w-16'} md:w-64 overflow-y-auto h-fit border-r border-gray-300 shadow-lg`}>
@@ -74,6 +67,20 @@ const Sidebar = () => {
 
                 <NavLink
                     onClick={() => setToggle(false)}
+                    to='/seasons' className='flex items-center py-2 my-1 md:my-2 md:pl-2 md:mr-4 space-x-1 hover:rounded hover:cursor-pointer hover:bg-gray-200 hover:text-white'>
+                    <GiLinkedRings className='text-2xl text-teal-500 md:mr-4' />
+                    <span className={`${(toggle) ? 'md:inline' : 'hidden'} md:inline text-sm font-bold text-teal-500`}>Seasons</span>
+                </NavLink>
+
+                <NavLink
+                    onClick={() => setToggle(false)}
+                    to='/matchdays' className='flex items-center py-2 my-1 md:my-2 md:pl-2 md:mr-4 space-x-1 hover:rounded hover:cursor-pointer hover:bg-gray-200 hover:text-white'>
+                    <GiLinkedRings className='text-2xl text-teal-500 md:mr-4' />
+                    <span className={`${(toggle) ? 'md:inline' : 'hidden'} md:inline text-sm font-bold text-teal-500`}>Matchdays</span>
+                </NavLink>
+
+                <NavLink
+                    onClick={() => setToggle(false)}
                     to='/fixtures' className='flex items-center py-2 my-1 md:my-2 md:pl-2 md:mr-4 space-x-1 hover:rounded hover:cursor-pointer hover:bg-gray-200 hover:text-white'>
                     <BiCalendar className='text-2xl text-teal-500 md:mr-4' />
                     <span className={`${(toggle) ? 'md:inline' : 'hidden'} md:inline text-sm font-bold text-teal-500`}>Fixtures</span>
@@ -88,8 +95,22 @@ const Sidebar = () => {
 
                 <NavLink
                     onClick={() => setToggle(false)}
+                    to='/gallery' className='flex items-center py-2 my-1 md:my-2 md:pl-2 md:mr-4 space-x-1 hover:rounded hover:cursor-pointer hover:bg-gray-200 hover:text-white'>
+                    <GrGallery className='text-2xl text-teal-500 md:mr-4' />
+                    <span className={`${(toggle) ? 'md:inline' : 'hidden'} md:inline text-sm font-bold text-teal-500`}>Gallery</span>
+                </NavLink>
+
+                <NavLink
+                    onClick={() => setToggle(false)}
+                    to='/smlinks' className='flex items-center py-2 my-1 md:my-2 md:pl-2 md:mr-4 space-x-1 hover:rounded hover:cursor-pointer hover:bg-gray-200 hover:text-white'>
+                    <GiLinkedRings className='text-2xl text-teal-500 md:mr-4' />
+                    <span className={`${(toggle) ? 'md:inline' : 'hidden'} md:inline text-sm font-bold text-teal-500`}>Sm Links</span>
+                </NavLink>
+
+                {/* <NavLink
+                    onClick={() => setToggle(false)}
                     to='/teams' className='flex items-center py-2 my-1 md:my-2 md:pl-2 md:mr-4 space-x-1 hover:rounded hover:cursor-pointer hover:bg-gray-200 hover:text-white'>
-                    <BsPeopleFill className='text-2xl text-teal-500 md:mr-4' />
+                    <BsShieldFill className='text-2xl text-teal-500 md:mr-4' />
                     <span className={`${(toggle) ? 'md:inline' : 'hidden'} md:inline text-sm font-bold text-teal-500`}>Teams</span>
                 </NavLink>
 
@@ -98,12 +119,12 @@ const Sidebar = () => {
                     to='/wallhero' className='flex items-center py-2 my-1 md:my-2 md:pl-2 md:mr-4 space-x-1 hover:rounded hover:cursor-pointer hover:bg-gray-200 hover:text-white'>
                     <BiImage className='text-2xl text-teal-500 md:mr-4' />
                     <span className={`${(toggle) ? 'md:inline' : 'hidden'} md:inline text-sm font-bold text-teal-500`}>Wallhero</span>
-                </NavLink>
+                </NavLink> */}
 
-                <NavLink
+                {/* <NavLink
                     onClick={() => setToggle(false)}
                     to='/players' className='flex items-center py-2 my-1 md:my-2 md:pl-2 md:mr-4 space-x-1 hover:rounded hover:cursor-pointer hover:bg-gray-200 hover:text-white'>
-                    <MdAccountCircle className='text-2xl text-teal-500 md:mr-4' />
+                    <BsPeopleFill className='text-2xl text-teal-500 md:mr-4' />
                     <span className={`${(toggle) ? 'md:inline' : 'hidden'} md:inline text-sm font-bold text-teal-500`}>Players</span>
                 </NavLink>
 
@@ -112,28 +133,16 @@ const Sidebar = () => {
                     to='/posts' className='flex items-center py-2 my-1 md:my-2 md:pl-2 md:mr-4 space-x-1 hover:rounded hover:cursor-pointer hover:bg-gray-200 hover:text-white'>
                     <BsNewspaper className='text-2xl text-teal-500 md:mr-4' />
                     <span className={`${(toggle) ? 'md:inline' : 'hidden'} md:inline text-sm font-bold text-teal-500`}>Posts</span>
-                </NavLink>
+                </NavLink> */}
 
-                <NavLink
-                    onClick={() => setToggle(false)}
-                    to='/gallery' className='flex items-center py-2 my-1 md:my-2 md:pl-2 md:mr-4 space-x-1 hover:rounded hover:cursor-pointer hover:bg-gray-200 hover:text-white'>
-                    <GrGallery className='text-2xl text-teal-500 md:mr-4' />
-                    <span className={`${(toggle) ? 'md:inline' : 'hidden'} md:inline text-sm font-bold text-teal-500`}>Gallery</span>
-                </NavLink>
+                
 
-                <NavLink
+                {/* <NavLink
                     onClick={() => setToggle(false)}
                     to='/about' className='flex items-center py-2 my-1 md:my-2 md:pl-2 md:mr-4 space-x-1 hover:rounded hover:cursor-pointer hover:bg-gray-200 hover:text-white'>
                     <GiLinkedRings className='text-2xl text-teal-500 md:mr-4' />
                     <span className={`${(toggle) ? 'md:inline' : 'hidden'} md:inline text-sm font-bold text-teal-500`}>About</span>
-                </NavLink>
-
-                <NavLink
-                    onClick={() => setToggle(false)}
-                    to='/matchdays' className='flex items-center py-2 my-1 md:my-2 md:pl-2 md:mr-4 space-x-1 hover:rounded hover:cursor-pointer hover:bg-gray-200 hover:text-white'>
-                    <GiLinkedRings className='text-2xl text-teal-500 md:mr-4' />
-                    <span className={`${(toggle) ? 'md:inline' : 'hidden'} md:inline text-sm font-bold text-teal-500`}>Matchdays</span>
-                </NavLink>
+                </NavLink> */}
                 
             </ul>
         </div>

@@ -21,14 +21,20 @@ import ManageFixtures from './pages/fixtures/ManageFixtures';
 import ManageTeams from './pages/teams/ManageTeams';
 import ManageResults from './pages/results/ManageResults';
 import ManagePosts from './pages/posts/ManagePosts';
-import ManageGallery from './pages/gallery/ManageGallery';
 import ManagePlayers from './pages/players/ManagePlayers';
 import ManageAbout, { aboutLoader } from './pages/about/ManageAbout';
 import AddWallHero from './pages/teams/AddWallHero';
 import FixturePage, { fixtureLoader } from './pages/fixtures/FixturePage';
 import ResultPage, { resultLoader } from './pages/results/ResultPage';
+import Matchdays, { matchdayLoader } from './pages/matchdays/Matchdays';
 import PostPage, { postLoader } from './pages/posts/PostPage';
 import PlayerPage, { playerLoader } from './pages/players/PlayerPage';
+import ManageMatchdays from './pages/matchdays/ManageMatchdays';
+import Seasons from './pages/seasons/Seasons';
+import EditSeasons, { seasonLoader} from './pages/seasons/EditSeasons';
+import Gallery from './pages/gallery/Gallery';
+import Smlinks from './pages/sm/Smlinks';
+import EditSm, { smlinkLoader } from './pages/sm/EditSm';
 
 
 const router = createBrowserRouter(
@@ -50,9 +56,14 @@ const router = createBrowserRouter(
         <Route path='/posts' element={ <ManagePosts />} />
         <Route path='/players' element={ <ManagePlayers />} />
         <Route path='/teams' element={ <ManageTeams />} />
-        <Route path='/gallery' element={ <ManageGallery />} />
-        {/* <Route path='/matchdays' element={ <ManageMatchdays />} /> */}
+        <Route path='/gallery' element={ <Gallery />} />
+        <Route path='/seasons' element={ <Seasons />} />
+        <Route path='/smlinks' element={ <Smlinks />} />
+        <Route path='/matchdays' element={ <ManageMatchdays />} />
+        <Route path='/matchdays/update/:hashing' element={ <Matchdays />} loader = {matchdayLoader} />
+        <Route path='/seasons/update/:hashing' element={ <EditSeasons />} loader = {seasonLoader } />
         <Route path='/about' element={ <ManageAbout />} loader = {aboutLoader} />
+        <Route path='/smlinks/update/:hashing' element={ <EditSm />} loader = {smlinkLoader} />
 
         <Route path='/fixtures/:hashing' element= { <FixturePage />} loader={fixtureLoader} />
         <Route path='/fixtures/update/:hashing' element= { <FixturePage initIsUpdateFixture = {true} />} loader={fixtureLoader} />

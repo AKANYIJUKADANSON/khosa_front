@@ -18,56 +18,117 @@ import CustomTooltip from '../../components/CustomTooltip';
 const ManageFixtures = () => {
   // If used vite to create the react app
   const apiUrl = import.meta.env.VITE_API_URL;
+  const m_user = JSON.parse(localStorage.getItem('userdata'));
 
   const [isAddFixture, setIsAddFixture] = useState(false);
 
   const [fixtures, setFixtures] = useState([]);
   const [teamsList, setTeamList] = useState([]);
-  const [current_season, setCurrentSeason] = useState([]);
+  const [seasonList, setSeasonList] = useState([]);
   const [matchdayList, setMatchdayList] = useState([]);
 
-  const [season, setSeason] = useState('');
-  const [matchday, setMatchday] = useState('');
+  const [season_id, setSeasonId] = useState('');
+  const [matchday_id, setMatchdayId] = useState('');
   const [match_date, setMatchDate] = useState('');
   const [home_team, setHomeTeam] = useState('');
   const [away_team, setAwayTeam] = useState('');
+  const [match_time, setMatchTime] = useState('');
+  
+  const get_season_matchdays = async (event) =>{
 
-  const [hours, setHours] = useState('');
-  const [minutes, setMinutes] = useState('');
-  const [meridian, setMeridian] = useState('');
+    // const userdata1 = JSON.parse(localStorage.getItem('userdata'));
+    const formData = new FormData();
+    formData.append('loggedin_user_id', m_user.user_id);
+
+    const selected_season_id = event.target.value;
+
+    // Set season id
+    setSeasonId(selected_season_id);
+
+    const matchday_list = await fetch(`${apiUrl}/season_matchdays/${selected_season_id}`, {
+      method: 'POST',
+      body: formData
+    });
+
+    const data = await matchday_list.json();
+    // console.log("season_matchday_list: ", data.season_matchdays);
+    setMatchdayList(data.season_matchdays);
+
+  }
 
   useEffect(() => {
+    // const userdata = JSON.parse(localStorage.getItem('userdata'));
+    const formData = new FormData();
+    formData.append('loggedin_user_id', m_user.user_id);
+
     const get_fixtures = async () => {
-      const fixtures = await fetch(`${apiUrl}/fixtures`);
+      const fixtures = await fetch(`${apiUrl}/fixtures`, {
+        method: 'POST',
+        body: formData
+      });
       const data = await fixtures.json();
+      if(data.status == '401'){
+        setTimeout(() => {
+          toast.error(data.message);
+        }, 1000);
+        localStorage.clear();
+        window.location.href = '/';
+      }else if(data.status == '400'){
+        toast.error(data.message);
+        return;
+      }else{
       // console.log("Match fixtures: ", data.fixtures);
       setFixtures(data.fixtures);
+      }
+
     }
 
     const get_teams = async () => {
-      const teams_list = await fetch(`${apiUrl}/teams`);
+      const teams_list = await fetch(`${apiUrl}/teams`, {
+        method: 'POST',
+        body: formData
+      });
       const data = await teams_list.json();
-      // console.log("Teams_list: ", data.teams);
-      setTeamList(data.teams);
+      if(data.status == '401'){
+        setTimeout(() => {
+          toast.error(data.message);
+        }, 1000);
+        localStorage.clear();
+        window.location.href = '/';
+      }else if(data.status == '400'){
+        toast.error(data.message);
+        return;
+      }else{
+        // console.log("Teams_list: ", data.teams);
+        setTeamList(data.teams);
+      }
+      
     }
 
-    const get_current_season = async () => {
-      const current_season = await fetch(`${apiUrl}/current_season`);
-      const data = await current_season.json();
-      console.log("current_season: ", data.current_season);
-      setCurrentSeason(data.current_season);
+    const get_season_list = async () => {
+        const seasons_list = await fetch(`${apiUrl}/seasons`, {
+          method: 'POST',
+          body: formData
+        });
+
+        const data = await seasons_list.json();
+        if(data.status == '401'){
+        setTimeout(() => {
+          toast.error(data.message);
+        }, 1000);
+        localStorage.clear();
+        window.location.href = '/';
+      }else if(data.status == '400'){
+        toast.error(data.message);
+        return;
+      }else{
+        // console.log("seasons List: ", data.seasons);
+        setSeasonList(data.seasons);
+      }
+        
     }
 
-
-    const get_matchday_list = async () => {
-      const matchday_list = await fetch(`${apiUrl}/matchdays`);
-      const data = await matchday_list.json();
-      console.log("Matchday_list: ", data.matchdays);
-      setMatchdayList(data.matchdays);
-    }
-
-    get_matchday_list();
-    get_current_season();
+    get_season_list();
     get_fixtures();
     get_teams();
   }, [apiUrl]);
@@ -76,14 +137,11 @@ const ManageFixtures = () => {
   const submitFormData = async (e) => {
     e.preventDefault();
 
-    const match_time = hours + ':' + minutes + meridian;
-
-    // initialise FormData and append the object with its key
     const formData = new FormData();
+    formData.append('loggedin_user_id', m_user.user_id);
 
-    // Append all data to the formdata array
-    formData.append('season', season);
-    formData.append('matchday', matchday);
+    formData.append('season_id', season_id);
+    formData.append('matchday_id', matchday_id);
     formData.append('match_date', match_date);
     formData.append('match_time', match_time);
 
@@ -106,8 +164,27 @@ const ManageFixtures = () => {
         window.location.reload();
       }, 3000);
     } else {
-      toast.error(response_data.message);
-      return;
+      const error = response_data.message;
+      if ('season' in error){
+        toast.error('Season field is required');
+      }
+      else if('matchday' in error){
+        toast.error('Matchday field is required');
+      }
+      else if('match_date' in error){
+        toast.error('Match date field is required');
+      }
+      else if('home_team' in error){
+        toast.error('Home team field is required');
+      }
+      else if('away_team' in error){
+        toast.error('Away team field is required');
+      }
+      else{
+        toast.error(error);
+      }
+      
+      // return;
     }
 
   }
@@ -124,7 +201,7 @@ const ManageFixtures = () => {
             ${fixture.home_team} 
             ${fixture.away_team}
             ${fixture.date}
-            ${fixture.matchday}
+            ${fixture.matchday_label}
             ${fixture.season}
         `,
   }));
@@ -185,32 +262,41 @@ const ManageFixtures = () => {
     return (
       <>
         <NavLink to={`/fixtures/${row.hashing}`} className="hover:text-blue-800 cursor-pointer" >
-          <div className='flex justify-left text-sm items-center'>
-            <div className="flex md:flex space-x-4">
-              <div className='font-extralight'>
-                Matchday: {row.matchday}
+          <div className="block min-[360px]:flex gap-5">
+
+            <div className='flex justify-left text-sm items-center'>
+              <span className='bg-green-200 rounded p-1' key={row.id} >SN{row.season}</span>
+            </div>
+
+            <div className="block">
+              <div className='flex justify-left text-sm items-center'>
+                <div className="flex md:flex space-x-4">
+                  <div className='font-extralight'>
+                    Matchday: {row.matchday}
+                  </div>
+
+                  <div className='font-extralight'>
+                    Date: {row.date}
+                  </div>
+                </div>
               </div>
 
-              <div className='font-extralight'>
-                Date: {row.date}
+              <div className='flex justify-left items-center'>
+                <div className='text-sm font-light text-center'>
+                  <img src={row.home_team_logo} alt="" className='h-7 w-7 mx-auto rounded-full' />
+                  <span className='font-bold'>{row.home_team}</span><br />
+                </div>
+
+                <div className="font-bold text-red-600 mx-2 mt-10 text-center">
+                  <span className='font-bold'>vs</span><br />
+                  <span className='font-extralight text-sm'>{row.time}</span><br />
+                </div>
+
+                <div className='text-sm font-light text-center'>
+                  <img src={row.away_team_logo} alt="" className='h-7 w-7 mx-auto rounded-full' />
+                  <span className='font-bold'>{row.away_team}</span><br />
+                </div>
               </div>
-            </div>
-          </div>
-
-          <div className='flex justify-left items-center'>
-            <div className='text-sm font-light text-center'>
-              <img src={row.home_team_logo} alt="" className='h-7 w-7 mx-auto rounded-full' />
-              <span className='font-bold'>{row.home_team}</span><br />
-            </div>
-
-            <div className="font-bold text-red-600 mx-2 mt-10 text-center">
-              <span className='font-bold'>vs</span><br />
-              <span className='font-extralight text-sm'>{row.time}</span><br />
-            </div>
-
-            <div className='text-sm font-light text-center'>
-              <img src={row.away_team_logo} alt="" className='h-7 w-7 mx-auto rounded-full' />
-              <span className='font-bold'>{row.away_team}</span><br />
             </div>
           </div>
         </NavLink>
@@ -225,7 +311,7 @@ const ManageFixtures = () => {
         <div className="items-center my-2">
           {(!isAddFixture) ?
             <h2 className="text-md text-left text-teal-500 font-bold my-auto">FIXTURES</h2>
-            :
+            : 
             <h2 className="text-md text-left text-teal-500 font-bold my-auto">ADD FIXTURE</h2>
           }
         </div>
@@ -252,14 +338,18 @@ const ManageFixtures = () => {
                     <label className='block mb-1 text-sm font-medium text-gray-700'>Season*</label>
 
                     <select
-                      name="season"
-                      value={season}
-                      onChange={(e) => setSeason(e.target.value)}
+                      name="season_id"
+                      value={season_id}
+                      onChange={get_season_matchdays}
                       className="mt-1 block w-full p-3 border pr-6 rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-500 focus:ring-opacity-50"
                       required
                     >
-                      <option disabled defaultValue={''} value=''>Choose...</option>
-                      <option value={current_season.id}>Season {current_season.season}</option>
+                      <option defaultValue={''}>Choose..</option>
+                      {seasonList.map((season) => (
+                          <option key={season.id} value={season.id}>
+                              Season {season.season}
+                          </option>
+                      ))}
                     </select>
                   </div>
 
@@ -267,13 +357,13 @@ const ManageFixtures = () => {
                     <label className='block mb-1 text-sm font-medium text-gray-700'>Matchday*</label>
 
                     <select
-                      name="matchday"
-                      value={matchday}
-                      onChange={(e) => setMatchday(e.target.value)}
+                      name="matchday_id"
+                      value={matchday_id}
+                      onChange={(e) => setMatchdayId(e.target.value)}
                       className="mt-1 block w-full p-3 border pr-6 rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-500 focus:ring-opacity-50"
                       required
                     >
-                      <option disabled value="">Choose..</option>
+                      <option disabled value=''>Choose..</option>
                       {matchdayList.map((matchday) => (
                         <option key={matchday.id} value={matchday.id}>
                           Matchday {matchday.matchday}
@@ -301,40 +391,16 @@ const ManageFixtures = () => {
                     <label className='block mb-1 text-sm font-medium text-gray-700'>Time*</label>
 
                     <div className="flex">
-
                       <input
-                        name="hours"
-                        value={hours}
-                        onChange={(e) => setHours(e.target.value)}
-                        type='number'
-                        min={1} max={12}
-                        className='w-full mx-2 p-1 border text-center font-bold rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 border-gray-300'
-                        placeholder='00'
+                        name="match_time"
+                        value={match_time}
+                        onChange={(e) => setMatchTime(e.target.value)}
+                        type='time'
+                        maxLength={2}
+                        className='w-full p-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 border-gray-300'
+                        placeholder='hh'
                         required
                       />
-
-                      <input
-                        name="minutes"
-                        value={minutes}
-                        onChange={(e) => setMinutes(e.target.value)}
-                        type='number'
-                        min={0} max={59}
-                        className='w-full text-center mx-2 p-1 border font-bold rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 border-gray-300'
-                        placeholder='00'
-                        required
-                      />
-
-                      <select
-                        name="meridian"
-                        value={meridian}
-                        onChange={(e) => setMeridian(e.target.value)}
-                        className="mt-1 block w-full text-center p-3 border font-bold rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-500 focus:ring-opacity-50"
-                        required
-                      >
-                        <option disabled value="">choose...</option>
-                        <option value='AM'>PM</option>
-                        <option value='PM'>AM</option>
-                      </select>
                     </div>
                   </div>
 
@@ -410,7 +476,7 @@ const ManageFixtures = () => {
                 />
               </div>
               <DataTable value={data}
-                ref={data}
+                // ref={data}
                 tableStyle={{ minWidth: '10rem' }}
                 filters={filters}
                 globalFilterFields={['combinedColumns']}

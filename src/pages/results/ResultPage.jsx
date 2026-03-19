@@ -12,6 +12,7 @@ import { BiPencil } from 'react-icons/bi';
 const ResultPage = ({ initIsUpdateResult }) => {
 
     const apiUrl = import.meta.env.VITE_API_URL;
+    const userdata = JSON.parse(localStorage.getItem('userdata'));
 
     // Get the fixture data from the loader
     const selected_result = useLoaderData();
@@ -48,44 +49,64 @@ const ResultPage = ({ initIsUpdateResult }) => {
 
 
     useEffect(() => {
+        const formData = new FormData();
+        formData.append('loggedin_user_id', userdata.user_id);
 
         const get_teams = async () => {
-            const teams_list = await fetch(`${apiUrl}/teams`);
+            const teams_list = await fetch(`${apiUrl}/teams`, {
+                method : 'POST',
+                body : formData
+            });
             const data = await teams_list.json();
             // console.log("Teams_list: ", data.teams);
             setTeamList(data.teams);
         }
 
         const get_players_list = async () => {
-            const players_list = await fetch(`${apiUrl}/players`);
+            const players_list = await fetch(`${apiUrl}/players`, {
+                method : 'POST',
+                body : formData
+            });
             const data = await players_list.json();
             // console.log("Players_list: ", data.players);
             setPlayersList(data.players);
         }
 
         const get_season_list = async () => {
-            const seasons_list = await fetch(`${apiUrl}/seasons`);
+            const seasons_list = await fetch(`${apiUrl}/seasons`, {
+                method : 'POST',
+                body : formData
+            });
             const data = await seasons_list.json();
             // console.log("Seasons_list: ", data.seasons);
             setSeasonList(data.seasons);
         }
 
         const get_matchday_list = async () => {
-            const matchday_list = await fetch(`${apiUrl}/matchdays`);
+            const matchday_list = await fetch(`${apiUrl}/matchdays`, {
+                method : 'POST',
+                body : formData
+            });
             const data = await matchday_list.json();
             // console.log("Matchday_list: ", data.matchdays);
             setMatchdayList(data.matchdays);
         }
 
         const get_home_team_match_goals = async () => {
-            const home_team_match_goals = await fetch(`${apiUrl}/results/match_goals/${selected_result.id}/${selected_result.home_team_id}`);
+            const home_team_match_goals = await fetch(`${apiUrl}/results/match_goals/${selected_result.id}/${selected_result.home_team_id}`, {
+                method : 'POST',
+                body : formData
+            });
             const data = await home_team_match_goals.json();
             // console.log("Home_team_match_goals: ", data.match_goals);
             setHomeTeamMatchScorers(data.match_goals);
         }
 
         const get_away_team_match_goals = async () => {
-            const away_team_match_goals = await fetch(`${apiUrl}/results/match_goals/${selected_result.id}/${selected_result.away_team_id}`);
+            const away_team_match_goals = await fetch(`${apiUrl}/results/match_goals/${selected_result.id}/${selected_result.away_team_id}`, {
+                method : 'POST',
+                body : formData
+            });
             const data = await away_team_match_goals.json();
             // console.log("Away_team_match_goals: ", data.match_goals);
             setAwayTeamMatchScorers(data.match_goals);
@@ -172,6 +193,7 @@ const ResultPage = ({ initIsUpdateResult }) => {
     const handleSubmit = async (e) => {
         e.preventDefault();
 
+        formData.append('loggedin_user_id', userdata.user_id);
         const formDataToSend = new FormData();
         // Append individual form fields
         formDataToSend.append('season_id', formData.season_id);
@@ -562,23 +584,34 @@ const ResultPage = ({ initIsUpdateResult }) => {
                                         <span className='font-bold'>{selected_result.home_team}</span><br />
                                         {/* <span className='font-bold'>{selected_result.home_team_goals}</span> */}
                                     </div>
+                                    
+                                    <div className="block items-center justify-center">
+                                        <div className="font-bold text-teal-600
+                                            text-sm 
+                                            min-[450px]:text-2xl
+                                            min-[1020px]:text-5xl
+                                            mx-3 bg-teal-100 shadow-md px-1 md:px-5 md:py-2 rounded md:mx-4 flex justify-center items-center ">
+                                            <div className="flex">
+                                                <span className='font-bold'>{selected_result.home_team_goals}</span>
+                                            </div>
 
-                                    <div className="font-bold text-teal-600
-                                        text-sm 
-                                        min-[450px]:text-2xl
-                                        min-[1020px]:text-5xl
-                                        mx-3 bg-teal-100 shadow-md px-1 md:px-5 md:py-2 rounded md:mx-4 flex justify-center items-center ">
-                                        <div className="flex">
-                                            <span className='font-bold'>{selected_result.home_team_goals}</span>
+                                            <div className="flex">
+                                                <span className='font-bold mx-3 -mt-1 my-auto text-3xl'>-</span>
+                                            </div>
+
+                                            <div className="flex">
+                                                <span className='font-bold'>{selected_result.away_team_goals}</span>
+                                            </div>
                                         </div>
 
-                                        <div className="flex">
-                                            <span className='font-bold mx-3 -mt-1 my-auto text-3xl'>-</span>
+                                        <div className="font-bold text-red-600
+                                            text-sm 
+                                            min-[450px]:text-lg
+                                            min-[1020px]:text-xl
+                                            mx-3 px-1 md:px-5 md:py-2 rounded md:mx-4 flex justify-center items-center">
+                                                {(selected_result.win_type == 'Walkover') ? 'W' : ''}
                                         </div>
-
-                                        <div className="flex">
-                                            <span className='font-bold'>{selected_result.away_team_goals}</span>
-                                        </div>
+                                        
                                     </div>
 
                                     <div className='text-sm 
@@ -611,6 +644,10 @@ const ResultPage = ({ initIsUpdateResult }) => {
                                             ))}
                                         </div>
 
+                                        <div className="block my-2">
+                                            <span className='text-teal-500 text-md font-bold'>LP: <span>{selected_result.home_team_lady_played}</span></span>
+                                        </div>
+
                                     </div>
 
                                     <div className='
@@ -628,6 +665,10 @@ const ResultPage = ({ initIsUpdateResult }) => {
                                             ))}
                                         </div>
 
+                                        <div className="block my-2">
+                                            <span className='text-teal-500 text-md font-bold'>LP: <span>{selected_result.away_team_lady_played}</span></span>
+                                        </div>
+
                                     </div>
 
                                 </div>
@@ -639,11 +680,12 @@ const ResultPage = ({ initIsUpdateResult }) => {
             </div>
 
             {(!isUpdateResult) ?
-                <NavLink
-                    onClick={() => setIsUpdateResult(true)}
-                    className="bg-teal-500 text-white p-2 md:p-3 shadow-lg fixed  rounded-full bottom-7 right-4 hover:bg-teal-700 flex items-center justify-center">
-                    <BiPencil className='text-4xl' />
-                </NavLink>
+                // <NavLink
+                //     onClick={() => setIsUpdateResult(true)}
+                //     className="bg-teal-500 text-white p-2 md:p-3 shadow-lg fixed  rounded-full bottom-7 right-4 hover:bg-teal-700 flex items-center justify-center">
+                //     <BiPencil className='text-4xl' />
+                // </NavLink>
+                ''
                 :
                 <NavLink
                     onClick={() => setIsUpdateResult(false)}
@@ -662,16 +704,31 @@ const ResultPage = ({ initIsUpdateResult }) => {
 const resultLoader = async ({ params }) => {
     // If used vite to create the react app
     const apiUrl = import.meta.env.VITE_API_URL;
+    const userdata = JSON.parse(localStorage.getItem('userdata'));
+
+    const formData = new FormData();
+    formData.append('loggedin_user_id', userdata.user_id);
 
     // Get the hashed_id parameter sent in the link in the App.js file with the dataloader
     // The id parameter used in the App.js file should be the same as that used here
-    const response = await fetch(`${apiUrl}/results/${params.hashing}`);
+    const response = await fetch(`${apiUrl}/results/${params.hashing}`, {
+        method : 'POST',
+        body : formData
+      });
     const data = await response.json();
-    if (!response.ok) {
-        throw new Error('Failed to fetch result data');
+    if(data.status == '401'){
+        setTimeout(() => {
+        toast.error(data.message);
+        }, 1000);
+        localStorage.clear();
+        window.location.href = '/';
     }
-    // console.log(params.hashing);
-    return data.result;
+    else if(data.status == '400'){
+        toast.error(data.message);
+        return;
+    }else{
+        return data.result;
+    }
 };
 
 export { ResultPage as default, resultLoader } 

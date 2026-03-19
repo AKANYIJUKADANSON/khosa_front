@@ -2,14 +2,14 @@ import { IoMdLock, IoMdSettings } from 'react-icons/io';
 import { MdAccountCircle } from 'react-icons/md';
 import { NavLink } from 'react-router-dom';
 
-const UserDropDown = ( {dropdownRef, closeDropdown} ) => {
+const UserDropDown = ( {dropdownRef, closeDropdown, userdata} ) => {
 
   return (
       
       <div ref={dropdownRef} className='bg-white z-2 shadow-2xl border-1 top-19 border-gray-500 rounded p-2 w-40 absolute mr-2 dropdownProfile'>
 
-        <div className=" mx-auto border-2 space-x-2 text-xl font-extralight text-red-500 ">
-          <h2 className='text-center'>John Doe</h2>
+        <div className="space-x-2 text-xl font-light text-red-500 ">
+          <h2 className='text-cente'>{userdata.first_name +' '+ userdata.last_name}</h2>
         </div>
           <hr />
 

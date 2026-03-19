@@ -30,39 +30,37 @@ const LoginPage = () => {
     const submitLoginData = async (event) => {
         event.preventDefault();
 
-        navigate('/dashboard');
+        const formData = new FormData();
 
-        // try {
+        formData.append('useremail', useremail);
+        formData.append('password', password);
 
-        //     const response = await fetch(`${apiUrl}`, {
-        //         method: 'POST',
-        //         headers: {
-        //             'Content-type': 'application/json'
-        //         },
+        try {
 
-        //         body: JSON.stringify({ useremail, password })
-        //     });
+            const response = await fetch(`${apiUrl}/login`, {
+                method: 'POST',
+                body: formData
+            });
 
-        //     // console.log('Login data submitted:', { useremail, password });
-        //     const data = await response.json();
-        //     console.log('Login response', data);
+            // console.log('Login data submitted:', { useremail, password });
+            const data = await response.json();
+            // console.log('CI3_response', data);
 
-        //     if (data.status === '200') {
-        //         // If the response is successful, then set the user data in localStorage
-        //         localStorage.setItem('authenticated_user', JSON.stringify(data));
-        //         localStorage.setItem('auth_status', data.auth_status);
+            if (data.status == '200') {
+                // If the response is successful, then set the user data in localStorage
+                localStorage.setItem('userdata', JSON.stringify(data.userdata));
 
-        //         navigate('/dashboard');
+                navigate('/dashboard');
 
-        //     } else {
-        //         toast.error(data.message);
-        //         navigate('/login');
-        //     }
+            } else {
+                localStorage.clear();
+                toast.error(data.message);
+                navigate('/');
+            }
 
-        // } catch (error) {
-        //     // setError('An error occurred. Please try again.');
-        //     toast.error(error.message + '. Internal servere error. please try again later.');
-        // }
+        } catch (error) {
+            toast.error(error.message + '. Internal server error. please try again later.');
+        }
 
     }
 

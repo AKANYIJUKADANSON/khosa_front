@@ -17,15 +17,15 @@ const MainLayout = () => {
    * If the user is not authenticated, then redirect to the login page
    * If the user is authenticated, then render the main layout with the sidebar, navbar and other components
    */
-  // const auth_status = localStorage.getItem('auth_status');
-  const auth_status = '1';
+  const userdata = JSON.parse(localStorage.getItem('userdata'));
+  // console.log("Userdata: ", userdata);
 
-  return (auth_status !== '1') ? window.location.href = '/login' : 
+  return (userdata != null && userdata.logged_in == true ) ? 
     <>
       <div className="flex h-full bg-gray-100" ref={appRef}>
         <Sidebar />
         
-        <Navbar appRef = { appRef } />
+        <Navbar userdata={userdata} appRef = { appRef } />
         <div style={{ fontFamily: 'sans-serif' }} className='grow ml:16 mt-20 h-full bg-gray-100 text-gray-900  '>
           <div style={{ fontFamily: 'sans-serif' }} className=' grow ml:16 md:ml-64 h-full bg-gray-00 text-gray-900 dark:bg-gray-900 dark:text-gray-100 '>
             {/* margin-left is 16 because the sidebar width is 16 and on md it will be 64 because the sidebar width is also 64
@@ -47,6 +47,8 @@ const MainLayout = () => {
         </div>
       </div>
     </>
+    : window.location.href = '/';
+
 }
 
 export default MainLayout
